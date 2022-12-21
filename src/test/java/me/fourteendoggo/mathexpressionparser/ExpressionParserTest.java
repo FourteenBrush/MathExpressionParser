@@ -40,6 +40,14 @@ class ExpressionParserTest {
     }
 
     @Test
+    void testMultipleOperatorsWithPriority() {
+        assertEquals(720, ExpressionParser.parse("2*3*4*5*6"));
+        assertEquals(0.25, ExpressionParser.parse("2/4/2"));
+        assertEquals(57603, ExpressionParser.parse("3+4^5*(45*5)/4"));
+        assertEquals(122, ExpressionParser.parse("34*12/4+4*5"));
+    }
+
+    @Test
     void testParentheses() {
         assertEquals(14, ExpressionParser.parse("2+(3*4)"));
         assertEquals(10, ExpressionParser.parse("(3+7)"));
@@ -47,6 +55,7 @@ class ExpressionParserTest {
         assertEquals(90, ExpressionParser.parse("((3+6)*10)"));
         assertEquals(30, ExpressionParser.parse("((3+6)*10)/3"));
         assertEquals(1, ExpressionParser.parse("(3*4)/12"));
+        assertEquals(1, ExpressionParser.parse("((3*4)/(9+3))"));
         assertEquals(1, ExpressionParser.parse("((3*4)/(9+3))"));
     }
 
@@ -66,6 +75,7 @@ class ExpressionParserTest {
         assertThrows(() -> ExpressionParser.parse("1.."));
         assertThrows(() -> ExpressionParser.parse("."));
         assertThrows(() -> ExpressionParser.parse(".."));
+        assertThrows(() -> ExpressionParser.parse("1..2"));
         assertThrows(() -> ExpressionParser.parse("1. -1"));
         assertThrows(() -> ExpressionParser.parse("1 + ."));
         assertThrows(() -> ExpressionParser.parse("1 + .1"));

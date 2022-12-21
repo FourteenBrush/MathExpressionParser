@@ -17,18 +17,6 @@ public enum Operator implements Token {
     private final int priority;
     private final DoubleBinaryOperator solver;
 
-    public static final int LOWEST_PRIORITY;
-
-    static {
-        int lowest = 0;
-        for (Operator op : values()) {
-            if (op.getPriority() < lowest) {
-                lowest = op.getPriority();
-            }
-        }
-        LOWEST_PRIORITY = lowest;
-    }
-
     Operator(char symbol, int priority, DoubleBinaryOperator solver) {
         this.symbol = symbol;
         this.priority = priority;

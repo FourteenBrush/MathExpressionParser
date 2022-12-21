@@ -2,7 +2,11 @@ package me.fourteendoggo.mathexpressionparser;
 
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 
+import java.util.function.ToDoubleFunction;
+
 public class ExpressionParser {
+
+    private ExpressionParser() {}
 
     /**
      * Parses the given expression and returns the result
@@ -12,8 +16,13 @@ public class ExpressionParser {
      * @throws SyntaxException if the given expression is invalid or empty
      */
     public static double parse(String input) {
-        Validate.notBlank(input);
+        Assert.notNull(input, "input was null");
+        Assert.notBlank(input);
 
         return new Expression(input.toCharArray()).parse();
+    }
+
+    public static void insertFunction(String function, ToDoubleFunction<double[]> solver) {
+        Tokenizer.FUNCTION_CONTAINER.insert(function, solver);
     }
 }

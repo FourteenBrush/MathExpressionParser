@@ -4,13 +4,11 @@ Java utility to parse mathematical expressions and evaluate them
 ## Usage
 
 ```java
-ExpressionParser parser = new ExpressionParser();
-double output = parser.parse("100 + 10.5");
-
-assertEquals(110.5, output);
+double result = ExpressionParser.parse("2 * (2 + 2)")
+assert result == 8
 ```
 
-The parse method throws a InputMismatchException, meaning the input could not be parsed correctly, you may want to catch this exception
+The parse method throws an SyntaxException if the expression is invalid
 
 ## Syntax
 
@@ -34,8 +32,5 @@ The parse method throws a InputMismatchException, meaning the input could not be
 
 ## Todo
 
-- [x] Use doubles instead of integers
 - [ ] Implementing multiple operators together with operator priority
-- [ ] Implementing parentheses
 - [ ] Fix precision loss when working with very small numbers
-- [ ] Strictly disallowing invalid input by throwing the appropriate exception

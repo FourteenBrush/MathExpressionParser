@@ -4,38 +4,32 @@ import me.fourteendoggo.mathexpressionparser.ExpressionParser;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
+@BenchmarkMode(Mode.All)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class ExpressionParserBenchmark {
-    private ThreadLocalRandom random;
+    private static final int NUM_EXPRESSIONS = 1000;
+    private final int[] firstOperands = new int[NUM_EXPRESSIONS];
+    private final int[] secondOperands = new int[NUM_EXPRESSIONS];
 
     @Setup
     public void setup() {
-        random = ThreadLocalRandom.current();
+        Random random = ThreadLocalRandom.current();
+        for (int i = 0; i < NUM_EXPRESSIONS; i++) {
+            firstOperands[i] = random.nextInt(10000);
+            secondOperands[i] = random.nextInt(10000);
+        }
     }
 
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
     @Fork(value = 2, warmups = 2)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
-    public void parseSingleExpression(Blackhole blackhole) {
-        double result = ExpressionParser.parse("3*5");
-
-        blackhole.consume(result);
-    }
-
-    @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @Fork(value = 2, warmups = 2)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
     public void parseMultipleExpressions(Blackhole blackhole) {
-        for (int i = 0; i < 100; i++) {
-            int firstOperand = random.nextInt(0, 1000);
-            int secondOperand = random.nextInt(0, 1000);
-
-            double result = ExpressionParser.parse(firstOperand + "*" + secondOperand);
+        for (int i = 0; i < NUM_EXPRESSIONS; i++) {
+            double result = ExpressionParser.parse(firstOperands[i] + "*" + secondOperands[i]);
 
             blackhole.consume(result);
         }
