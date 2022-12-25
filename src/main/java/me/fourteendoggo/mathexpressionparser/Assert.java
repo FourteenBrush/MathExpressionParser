@@ -18,9 +18,9 @@ public interface Assert {
         }
     }
 
-    static void notNull(Object o, String message, Function<String, SyntaxException> exceptionSupplier) {
+    static void notNull(Object o, String message, Function<String, SyntaxException> exceptionFunction) {
         if (o == null) {
-            throw exceptionSupplier.apply(message);
+            throw exceptionFunction.apply(message);
         }
     }
 

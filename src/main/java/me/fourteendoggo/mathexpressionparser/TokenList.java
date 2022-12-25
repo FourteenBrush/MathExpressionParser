@@ -14,18 +14,24 @@ public class TokenList {
         validateIncomingType(token.getType());
         lastType = token.getType();
 
-        if (pointer == null) { // would mean head is null too
+        if (pointer == null) {
             LinkedCalculation calculation = new LinkedCalculation((Operand) token);
             pointer = calculation;
             head = calculation;
+            numCalculations++;
         } else if (pointer.isComplete()) {
-            pointer.next = new LinkedCalculation(pointer, (Operator) token);
-            pointer = pointer.next; // move pointer to the newly created calculation
+            if (pointer.simplify()) {
+                // pointer only contains a left operand and an operator now
+                pointer.addToken(token);
+            } else {
+                // pointer is a complete calculation, but it was not simplified
+                pointer.next = new LinkedCalculation(pointer, (Operator) token);
+                pointer = pointer.next;
+                numCalculations++;
+            }
         } else {
             pointer.addToken(token);
-            return; // we are adding to an existing calculation, no need to increment numCalculations
         }
-        numCalculations++;
     }
 
     public void validateIncomingType(TokenType type) {
@@ -174,9 +180,9 @@ public class TokenList {
         private Operator operator;
 
         public LinkedCalculation(LinkedCalculation prev, Operator operator) {
-            // might want to call clone() on prev.right because Operand is mutable
             this(prev, prev.right);
             this.operator = operator;
+            // might want to call clone() on prev.right because Operand is mutable
         }
 
         public LinkedCalculation(LinkedCalculation prev, Operand left) {
@@ -204,6 +210,16 @@ public class TokenList {
 
         public boolean isComplete() {
             return operator != null && right != null; // left will never be null so no need to check
+        }
+
+        public boolean simplify() {
+            if (operator.getPriority() != Operator.HIGHEST_PRIORITY) {
+                return false;
+            }
+            double result = solve();
+            left.setValue(result);
+            right = null;
+            return true;
         }
 
         public double solve() {

@@ -56,7 +56,6 @@ class ExpressionParserTest {
         assertEquals(30, ExpressionParser.parse("((3+6)*10)/3"));
         assertEquals(1, ExpressionParser.parse("(3*4)/12"));
         assertEquals(1, ExpressionParser.parse("((3*4)/(9+3))"));
-        assertEquals(1, ExpressionParser.parse("((3*4)/(9+3))"));
     }
 
     @Test

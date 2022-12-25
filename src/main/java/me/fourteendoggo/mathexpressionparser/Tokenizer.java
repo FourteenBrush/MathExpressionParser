@@ -1,6 +1,9 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.tokens.FunctionCallSite;
+import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
+import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
+import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
+import me.fourteendoggo.mathexpressionparser.tokens.Operand;
 
 import java.nio.CharBuffer;
 
@@ -36,14 +39,46 @@ public class Tokenizer {
         return buffer.get(position());
     }
 
-    public FunctionContainer.FunctionNode readFunction() {
-        FunctionContainer.FunctionNode function = FUNCTION_CONTAINER.search(buffer.array(), position());
+    public Operand readFunction() {
+        FunctionCallSite function = FUNCTION_CONTAINER.search(buffer.array(), position());
         move(function.getLength());
-        return function;
+        Assert.isTrue(hasRemaining() && buffer.get() == '(', "expected '(' after function name");
+
+        FunctionContext parameters = new FunctionContext();
+        // Expression will disallow reading () so we just don't try to read parameters if the minArgs == 0
+        if (function.getMinArgs() > 0) {
+            Expression sub = new Expression(buffer.array(), current -> current != ',' && current != ')');
+            Tokenizer tokenizer = sub.getTokenizer();
+            tokenizer.position(position()); // modify their position to start reading behind the '('
+
+            readParameterList(parameters, sub, tokenizer);
+        }
+        Assert.isTrue(hasRemaining() && buffer.get() == ')', "expected ')' after function parameter list");
+
+        return new Operand(function.apply(parameters));
     }
 
-    public FunctionCallSite readFunctionCall() {
-        return null;
+    private void readParameterList(FunctionContext source, Expression sub, Tokenizer tokenizer) {
+        source.add(sub.parse());
+
+        while (tokenizer.hasRemaining() && tokenizer.current() == ',') {
+            int oldPos = tokenizer.position();
+            // parse individual parameter
+            sub = new Expression(buffer.array(), current -> current != ',' && current != ')');
+            tokenizer = sub.getTokenizer();
+            tokenizer.position(oldPos + 1); // move behind the ','
+            source.add(sub.parse());
+        }
+        position(tokenizer.position()); // update our position to the ')'
+    }
+
+    public Operand readOperand() {
+        return readOperand('0');
+    }
+
+    public Operand readOperand(char firstChar) {
+        double value = readDouble(firstChar);
+        return new Operand(value);
     }
 
     /**
@@ -56,7 +91,6 @@ public class Tokenizer {
     /**
      * Attempts to read a double from the internal buffer, starting at {@link #position()}
      * and therefore moving the position forward to the end position of the double + 1. <br/>
-     * This method uses {@link #readInt()} internally to read the integer parts of the number. <br/>
      * If we reached the end of the buffer, or it doesn't contain a number, 0.0 is returned.
      * @param firstChar the first character that is already been read (see {@link Expression#parse()})
      * @return the double read from the buffer or 0.0 if no double was found
@@ -81,7 +115,8 @@ public class Tokenizer {
         return beforeCommaValue + decimalPart;
     }
 
-    // TODO: use this for later boolean logic, f.e. or(1, 0) -> 1
+    // TODO: use this for optimisation purposes
+    // might actually use a a custom functions with readDouble() instead
     /**
      * Attempts to read an integer from the internal buffer
      * If we couldn't read anything or there is no number, we return a 0
@@ -133,7 +168,7 @@ public class Tokenizer {
 
     @Override
     public String toString() {
-        return "TokenReader{buffer=" + buffer + '}';
+        return "Tokenizer{buffer=" + buffer + '}';
     }
 
     /**

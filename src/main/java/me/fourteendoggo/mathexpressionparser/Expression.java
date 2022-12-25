@@ -23,6 +23,10 @@ public class Expression {
         this.loopCondition = loopCondition;
     }
 
+    Tokenizer getTokenizer() { // package-private
+        return tokenizer;
+    }
+
     public double parse() {
         char currentChar;
         while (tokenizer.hasRemaining() && loopCondition.test((currentChar = tokenizer.current()))) {
@@ -54,7 +58,6 @@ public class Expression {
                     if (tokens.getLastType() == TokenType.OPERAND) {
                         // replace things like 2(3+4) with 2*(3+4)
                         tokens.addToken(Operator.MULTIPLICATION);
-                        // TODO: find out why i can't call appendToken here
                     }
                     tokens.validateIncomingType(TokenType.LEFT_PARENTHESIS);
                     // sub will continue reading until it finds a right parenthesis
@@ -65,15 +68,12 @@ public class Expression {
                 }
                 case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
                         'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
-                    FunctionContainer.FunctionNode function = tokenizer.readFunction();
-                    if (tokenizer.hasRemaining() && tokenizer.current() == '(') {
-                        tokenizer.next(); // skip the '('
-                        Expression sub = new Expression(input, current -> current != ')');
-                        sub.tokenizer.position(tokenizer.position()); // modify their position to start reading behind the '('
-                        double inner = sub.parse();
-                        appendToken(function.apply(inner)); // sub.reader pos is now at the ')'
-                        tokenizer.position(sub.tokenizer.position() + 1); // modify our position to resume reading behind the ')'
+                    if (tokens.getLastType() == TokenType.OPERAND) {
+                        // replace things like 2cos(3) with 2*cos(3)
+                        tokens.addToken(Operator.MULTIPLICATION);
                     }
+                    Operand function = tokenizer.readFunction();
+                    tokens.addToken(function);
                 }
                 default -> throw new SyntaxException("invalid character: " + currentChar);
             }
@@ -82,22 +82,18 @@ public class Expression {
     }
 
     private void appendOperand() {
-        double readDouble = tokenizer.readDouble();
-        tokens.addToken(new Operand(readDouble));
+        Operand operand = tokenizer.readOperand();
+        tokens.addToken(operand);
     }
 
     private void appendOperand(char firstChar) {
-        tokenizer.next();
-        double readDouble = tokenizer.readDouble(firstChar);
-        tokens.addToken(new Operand(readDouble));
-    }
-
-    private void appendToken(double operand) {
-        appendToken(new Operand(operand));
+        tokenizer.next(); // skip char
+        Operand operand = tokenizer.readOperand(firstChar);
+        tokens.addToken(operand);
     }
 
     private void appendToken(Token token) {
         tokens.addToken(token);
-        tokenizer.next(); // move to the next char, #appendOperand does this automatically!
+        tokenizer.next();
     }
 }
