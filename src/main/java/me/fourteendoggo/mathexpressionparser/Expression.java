@@ -55,6 +55,7 @@ public class Expression {
                 case '%' -> appendToken(Operator.MODULO);
                 case '+' -> appendToken(Operator.ADDITION);
                 case '(' -> {
+                    // TODO clean up
                     if (tokens.getLastType() == TokenType.OPERAND) {
                         // replace things like 2(3+4) with 2*(3+4)
                         tokens.addToken(Operator.MULTIPLICATION);
@@ -64,6 +65,7 @@ public class Expression {
                     Expression sub = new Expression(input, current -> current != ')');
                     sub.tokenizer.position(tokenizer.position() + 1); // modify their position to start reading behind the '('
                     appendToken(new Operand(sub.parse())); // sub.reader pos is now at the ')'
+                    Assert.isTrue(sub.tokenizer.hasRemaining() && sub.tokenizer.current() == ')', "missing closing parenthesis");
                     tokenizer.position(sub.tokenizer.position() + 1); // modify our position to resume reading behind the ')'
                 }
                 case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',

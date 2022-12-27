@@ -12,6 +12,7 @@ public enum Operator implements Token {
     MODULO('%', 2, (a, b) -> a % b),
     ADDITION('+', 1, Double::sum),
     SUBTRACTION('-', 1, (a, b) -> a - b);
+
     public static final int HIGHEST_PRIORITY = 3;
 
     private final char symbol;

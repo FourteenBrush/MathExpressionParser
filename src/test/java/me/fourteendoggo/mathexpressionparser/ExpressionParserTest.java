@@ -3,7 +3,6 @@ package me.fourteendoggo.mathexpressionparser;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,6 +23,7 @@ class ExpressionParserTest {
         assertEquals(0, ExpressionParser.parse("0 *0"));
     }
 
+    // TODO: overflow
     @Test
     void testPrecision() {
         assertEquals(117.62500501328793, ExpressionParser.parse("34.82726271 * 3.377383"));
@@ -32,66 +32,60 @@ class ExpressionParserTest {
     }
 
     @Test
-    void testMultipleOperatorsWithoutPriority() {
-        assertEquals(3, ExpressionParser.parse("1+1+1"));
-        assertEquals(8, ExpressionParser.parse("12-8+4"));
-        assertEquals(1, ExpressionParser.parse("1-1+1"));
-        assertEquals(9, ExpressionParser.parse("1-8+12+4"));
-    }
-
-    @Test
-    void testMultipleOperatorsWithPriority() {
-        assertEquals(720, ExpressionParser.parse("2*3*4*5*6"));
-        assertEquals(0.25, ExpressionParser.parse("2/4/2"));
-        assertEquals(57603, ExpressionParser.parse("3+4^5*(45*5)/4"));
-        assertEquals(122, ExpressionParser.parse("34*12/4+4*5"));
-    }
-
-    @Test
-    void testParentheses() {
-        assertEquals(14, ExpressionParser.parse("2+(3*4)"));
-        assertEquals(10, ExpressionParser.parse("(3+7)"));
-        assertEquals(10, ExpressionParser.parse("((3+7))"));
-        assertEquals(90, ExpressionParser.parse("((3+6)*10)"));
-        assertEquals(30, ExpressionParser.parse("((3+6)*10)/3"));
-        assertEquals(1, ExpressionParser.parse("(3*4)/12"));
-        assertEquals(1, ExpressionParser.parse("((3*4)/(9+3))"));
-    }
-
-    @Test
     void testThrowingExpressions() {
-        assertThrows(() -> ExpressionParser.parse(null));
-        assertThrows(() -> ExpressionParser.parse("  "));
-        assertThrows(() -> ExpressionParser.parse(" "));
-        assertThrows(() -> ExpressionParser.parse("1 +"));
-        assertThrows(() -> ExpressionParser.parse("+"));
-        assertThrows(() -> ExpressionParser.parse("1. +"));
-        assertThrows(() -> ExpressionParser.parse("+ 1"));
-        assertThrows(() -> ExpressionParser.parse("1 + ."));
-        assertThrows(() -> ExpressionParser.parse("-.1 + 1"));
-        assertThrows(() -> ExpressionParser.parse("1."));
-        assertThrows(() -> ExpressionParser.parse(".1"));
-        assertThrows(() -> ExpressionParser.parse("1.."));
-        assertThrows(() -> ExpressionParser.parse("."));
-        assertThrows(() -> ExpressionParser.parse(".."));
-        assertThrows(() -> ExpressionParser.parse("1..2"));
-        assertThrows(() -> ExpressionParser.parse("1. -1"));
-        assertThrows(() -> ExpressionParser.parse("1 + ."));
-        assertThrows(() -> ExpressionParser.parse("1 + .1"));
-        assertThrows(() -> ExpressionParser.parse("1 + 1."));
-        assertThrows(() -> ExpressionParser.parse("1 * 1."));
-        assertThrows(() -> ExpressionParser.parse("1. * 1"));
-        assertThrows(() -> ExpressionParser.parse("1. * 1."));
-        assertThrows(() -> ExpressionParser.parse("1.1 + 1 *"));
-        assertThrows(() -> ExpressionParser.parse("(."));
-        assertThrows(() -> ExpressionParser.parse(")"));
-        assertThrows(() -> ExpressionParser.parse("1 + (1"));
-        assertThrows(() -> ExpressionParser.parse("1 + 1)"));
-        assertThrows(() -> ExpressionParser.parse("( )"));
-        assertThrows(() -> ExpressionParser.parse("()"));
+        assertThrows(null);
+        assertThrows(" ");
+        assertThrows("1 +");
+        assertThrows("1 + .");
+        assertThrows("1 + .1");
+        assertThrows("1 + 1 +");
+        assertThrows("+");
+        assertThrows("1. + 1");
+        assertThrows(" + 1");
+        assertThrows("1. +");
+        assertThrows(".1");
+        assertThrows("1.");
+        assertThrows("1..1");
+        assertThrows("1..2");
+        assertThrows("1..");
+        assertThrows(".");
+        assertThrows("..");
+        assertThrows("1. -1");
+        assertThrows("-.1 + 1");
+        assertThrows("1. * 1");
+        assertThrows("1 * 1.");
+        assertThrows("1. * 1");
+        assertThrows("1. * 1.");
+        assertThrows("1.- * 1.");
+        assertThrows("1.-1 * 1.-3");
+        assertThrows("1.1 + 1*");
+        assertThrows("(.");
+        assertThrows(")");
+        assertThrows("()");
+        assertThrows("1 + (1");
+        assertThrows("1+ 1)");
+        assertThrows("((1+1)");
+        assertThrows("(1+1))");
+        assertThrows("( )");
+        assertThrows("1.sin(1)");
+        assertThrows("sin(1");
+        assertThrows("sin 1");
+        assertThrows("sin (1)");
+        assertThrows("isn(1)");
+        assertThrows("sin(1.cos(2))");
+        assertThrows("sin(1.cos(2)");
+        assertThrows("cos2(2)");
+        assertThrows("max(0)"); // expects two args
+        assertThrows("max(1,, 3)");
+        assertThrows("max(1, )");
+        assertThrows("max(1,)");
+        assertThrows("max(,)");
+        assertThrows("max(,,)");
+        assertThrows("max((-))");
+        assertThrows("min(max(1,3))");
     }
 
-    private void assertThrows(Executable executable) {
-        Assertions.assertThrows(SyntaxException.class, executable);
+    private void assertThrows(String expression) {
+        Assertions.assertThrows(SyntaxException.class, () -> ExpressionParser.parse(expression));
     }
 }

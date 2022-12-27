@@ -8,7 +8,7 @@ import me.fourteendoggo.mathexpressionparser.tokens.Operand;
 import java.nio.CharBuffer;
 
 public class Tokenizer {
-    static final FunctionContainer FUNCTION_CONTAINER = new FunctionContainer(); // package-private
+    static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.createDefault(); // package-private
     private final CharBuffer buffer;
 
     public Tokenizer(char[] input) {
@@ -105,6 +105,8 @@ public class Tokenizer {
         next(); // skip the decimal point
         IntResult behindComma = readInt0();
         Assert.isFalse(behindComma.isBlank(), "read a decimal point but no value comes behind it");
+        // fix 1.-1 TODO: might want to use a #readUnsignedInt to read the fractional part
+        Assert.isFalse(behindComma.negative(), "a fractional part of a number cannot be negative");
         // always unsigned
         double decimalPart = behindComma.value() / (double) behindComma.decimalDivider();
         // fix -0.25 being read as 0.25 and -1.25 being read as -0.75
@@ -162,6 +164,8 @@ public class Tokenizer {
             next(); // consume the character
             decimalDivider *= 10;
         }
+        // fix -.1 being read as -0.1
+        Assert.isTrue(decimalDivider > 1, "no value comes behind the negative sign");
         // see IntResult for more info why we don't do negative ? -result : result
         return new IntResult(result, negative, decimalDivider);
     }
@@ -173,7 +177,7 @@ public class Tokenizer {
 
     /**
      * The result of an attempted try to read an integer from the buffer
-     * This is used by internals methods to handle the fractional part of a double
+     * This is used by internal methods to handle the fractional part of a double
      *
      * @param value the value of the integer read
      * @param decimalDivider the result of {@code Math.pow(10, String.valueOf(value).length())} <br/>

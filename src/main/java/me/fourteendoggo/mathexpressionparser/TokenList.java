@@ -54,7 +54,7 @@ public class TokenList {
     }
 
     /**
-     * Solves the expression formed by this token list <br/>
+     * Solves the expression represented by this token list <br/>
      * Simple expressions like 1+1 or 1*3+1 will be solved in one pass
      * <h2>Algorithm explained:</h2>
      * The algorithm works with a linked list of calculations, each calculation object is a
@@ -82,6 +82,9 @@ public class TokenList {
             case 2 -> {
                 LinkedCalculation first = head;
                 LinkedCalculation second = first.next;
+
+                // x op y op was previously throwing a npe
+                Assert.notNull(second.right, "unexpected operator at end");
 
                 if (first.mayExecuteFirst()) {
                     // 2*3+2

@@ -2,22 +2,29 @@ package me.fourteendoggo.mathexpressionparser.function;
 
 import me.fourteendoggo.mathexpressionparser.Assert;
 import me.fourteendoggo.mathexpressionparser.exceptions.FunctionNotFoundException;
+import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 
 /**
  * A {@link FunctionContainer} is a data structure for storing functions and their solvers efficiently. <br/>
- * It uses a char trie to store the functions, where each node represents a next character in the function name. <br/>
- * Starting from the root node (which doesn't have any value), each node can have up to 26 children (a-z). <br/>
- * When you reach a {@link FunctionNode}, you know that you found a function and the nodes you followed represent the function name. <br/>
- * The {@link FunctionNode} contains the solver for the function, this doesn't mean that they can't have children themselves. <br/>
+ * It uses a char trie to store the functions, where each node represents a character in the function name. <br/>
+ * The root node doesn't have a value, and each node can have up to 26 children (a-z). <br/>
+ * When you reach a {@link FunctionNode}, you know that you've found a function and the nodes you followed represent the function name. <br/>
+ * The {@link FunctionNode} contains the handler for the function, however this node can still have children. <br/>
  * The data structure allows for efficient navigation in O(n) time, where n is the length of the function name.
  */
 public class FunctionContainer {
     private final Node root = new Node(' ');
 
-    public FunctionContainer() {
+    public static FunctionContainer createDefault() {
+        FunctionContainer container = new FunctionContainer();
+        container.insertDefaultFunctions();
+        return container;
+    }
+
+    private void insertDefaultFunctions() {
         insertFunction("sin", Math::sin);
         insertFunction("cos", Math::cos);
         insertFunction("tan", Math::tan);
@@ -32,7 +39,7 @@ public class FunctionContainer {
         insertFunction("cbrt", Math::cbrt);
         insertFunction("log", Math::log);
         insertFunction("rad", Math::toRadians);
-        insertFunction("abs", (double d) -> Math.abs((int) d));
+        insertFunction("abs", d -> Math.abs((int) d));
 
         insertFunction(new FunctionCallSite("min", 2, Integer.MAX_VALUE, ctx -> {
             double min = ctx.get(0);
@@ -72,13 +79,62 @@ public class FunctionContainer {
         }));
     }
 
+    /**
+     * Inserts a function into this container.
+     * This will return silently if the function already exists.
+     * @param function the function to insert
+     */
     public void insertFunction(FunctionCallSite function) {
-        root.insert(0, function);
+        String functionName = function.getName();
+        Node crawl = root;
+
+        for (int i = 0; i < functionName.length() - 1; i++) { // last node must be a FunctionNode, hence the - 1
+            char currentChar = functionName.charAt(i);
+            crawl = insertChildReturnNext(currentChar, crawl, Node::new);
+        }
+        char lastChar = functionName.charAt(functionName.length() - 1);
+        insertChildReturnNext(lastChar, crawl, current -> new FunctionNode(current, function));
     }
 
-    public FunctionCallSite search(char[] function, int fromPos) {
-        FunctionNode node = root.search(function, fromPos);
-        return node.solver;
+    private Node insertChildReturnNext(char currentChar, Node parent, CharFunction<Node> nodeFunction) {
+        int index = currentChar - 'a';
+        Assert.isTrue(index >= 0 && index <= 25, "function names must only contain lowercase letters");
+
+        if (parent.children[index] == null) { // unnecessary for the last node, but it's fine
+            parent.children[index] = nodeFunction.apply(currentChar);
+        }
+        return parent.children[index];
+    }
+
+    /**
+     * Searches for a function in this container, starting at {@code buffer[fromPos]}
+     * and assumes that the chars from that point on are the function name. <br/>
+     * If this container would contain the function "sin" and "sinh", both will work. <br/>
+     * If the function is found, the {@link FunctionCallSite} held by that node is returned. <br/>
+     * @param buffer the buffer to search in
+     * @param fromPos the position to start searching from, that position must be the first char of the function name
+     * @return a {@link FunctionCallSite} if the function is found, always returns a non-null value
+     * @throws FunctionNotFoundException if the function is not found
+     * @throws SyntaxException if the function name does not match (a-z)
+     */
+    public FunctionCallSite search(char[] buffer, int fromPos) {
+        Node crawl = root;
+
+        for (; fromPos < buffer.length; fromPos++) {
+            char current = buffer[fromPos];
+            if (current == '(') break; // end of function name
+            int index = current - 'a';
+            Assert.isTrue(index >= 0 && index <= 26, "function names must only contain lowercase letters");
+
+            Node child = crawl.children[index];
+            Assert.notNull(child, "function not found", FunctionNotFoundException::new);
+
+            crawl = child;
+        }
+        if (crawl instanceof FunctionNode fn) {
+            return fn.handler;
+        }
+        throw new FunctionNotFoundException("only a function with similar name was found");
     }
 
     @Override
@@ -93,39 +149,6 @@ public class FunctionContainer {
         public Node(char value) {
             this.value = value;
             this.children = new Node[26];
-        }
-
-        private void insert(int pos, FunctionCallSite solver) {
-            String functionName = solver.getName();
-            if (pos == functionName.length()) return; // to prevent out of bounds on recursive calls
-            char current = functionName.charAt(pos);
-
-            int index = current - 'a';
-            Assert.isTrue(index >= 0 && index <= 26, "function names must only consist of lowercase letters");
-            Node child = children[index];
-
-            if (child == null) {
-                if (pos == functionName.length() - 1) {
-                    child = new FunctionNode(current, solver);
-                } else {
-                    child = new Node(current);
-                }
-                children[current - 'a'] = child;
-            }
-            child.insert(pos + 1, solver);
-        }
-
-        private FunctionNode search(char[] function, int fromPos) {
-            if (fromPos == function.length || function[fromPos] == '(') {
-                if (this instanceof FunctionNode fn) return fn;
-                throw new FunctionNotFoundException("only a function with similar name exists");
-            }
-            int index = function[fromPos] - 'a';
-            Assert.isTrue(index >= 0 && index <= 26, "function names must only consist of lowercase letters");
-
-            Node child = children[index];
-            Assert.notNull(child, "function not found", FunctionNotFoundException::new);
-            return child.search(function, fromPos + 1);
         }
 
         @Override
@@ -153,11 +176,16 @@ public class FunctionContainer {
     }
 
     private static class FunctionNode extends Node {
-        private final FunctionCallSite solver;
+        private final FunctionCallSite handler;
 
-        public FunctionNode(char value, FunctionCallSite solver) {
+        public FunctionNode(char value, FunctionCallSite handler) {
             super(value);
-            this.solver = solver;
+            this.handler = handler;
         }
+    }
+
+    @FunctionalInterface
+    private interface CharFunction<R> {
+        R apply(char c);
     }
 }

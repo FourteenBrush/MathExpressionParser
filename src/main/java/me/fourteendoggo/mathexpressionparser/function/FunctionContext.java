@@ -2,13 +2,17 @@ package me.fourteendoggo.mathexpressionparser.function;
 
 /**
  * A class that provides parameters for a {@link FunctionCallSite}. <br/>
- * Reserves space for 10 parameters at default, but is dynamically resizable.
+ * Reserves space for 10 parameters by default, but is dynamically resizable.
  */
 public class FunctionContext {
     private double[] parameters = new double[10];
     private int size;
 
-    // should not be called by the user
+    /**
+     * Adds a parameter to this context, increasing the internal array if necessary.
+     * This should not be called by the user.
+     * @param value the parameter to add
+     */
     public void add(double value) {
         if (size == parameters.length) {
             double[] newParameters = new double[size * 2];
