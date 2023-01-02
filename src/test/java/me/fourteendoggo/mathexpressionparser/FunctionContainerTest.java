@@ -46,6 +46,7 @@ public class FunctionContainerTest {
     @Test
     void duplicateFunctionThrows() {
         container.insertFunction("sin", Math::sin);
+        // TODO: throw an exception when a function is already present
         assertThrows(SyntaxException.class, () -> container.insertFunction("sin", Math::sin));
     }
 }

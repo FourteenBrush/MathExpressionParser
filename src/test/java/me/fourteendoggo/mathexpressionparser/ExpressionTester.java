@@ -23,7 +23,8 @@ public class ExpressionTester {
                     continue;
                 }
 
-                double expected = new Tokenizer(expectedResult.toCharArray()).readDouble();
+                // for some reason I can't longer rely on new Tokenizer(expectedResult.toCharArray()).readDouble()
+                double expected = new Expression(expectedResult.toCharArray()).parse();
                 if (result != expected) {
                     errors++;
                     writer.write(format("Expression '%s' returned %.10f, expected %.10f\n",

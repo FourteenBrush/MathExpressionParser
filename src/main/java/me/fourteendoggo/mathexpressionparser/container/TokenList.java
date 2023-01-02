@@ -1,8 +1,13 @@
-package me.fourteendoggo.mathexpressionparser;
+package me.fourteendoggo.mathexpressionparser.container;
 
+import me.fourteendoggo.mathexpressionparser.Assert;
+import me.fourteendoggo.mathexpressionparser.Token;
+import me.fourteendoggo.mathexpressionparser.TokenType;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.tokens.Operand;
 import me.fourteendoggo.mathexpressionparser.tokens.Operator;
+
+import java.util.Objects;
 
 public class TokenList {
     // pointer represents the calculation we are currently constructing, acts as a tail
@@ -35,22 +40,15 @@ public class TokenList {
     }
 
     public void validateIncomingType(TokenType type) {
-        if (lastType != null) {
-            if (lastType.canLink(type)) return;
+        TokenType testWith = Objects.requireNonNullElse(lastType, TokenType.OPERATOR);
+        if (testWith != type) return;
 
-            String firstTokenName = translate(type);
-            String secondTokenName = translate(lastType);
-            throw new SyntaxException("cannot add " + firstTokenName + " after " + secondTokenName);
-        } else {
-            if (type == TokenType.OPERAND || type == TokenType.LEFT_PARENTHESIS) return;
-
-            String receivedToken = translate(type);
-            throw new SyntaxException("expected operand or left parentheses as first token, got " + receivedToken);
-        }
-    }
-
-    private String translate(TokenType type) {
-        return type.name().toLowerCase().replace('_', ' ');
+        // prepare throwing exception
+        String message = switch (type) {
+            case OPERAND -> "expected operator, got operand";
+            case OPERATOR -> "expected operand, got operator";
+        };
+        throw new SyntaxException(message);
     }
 
     /**

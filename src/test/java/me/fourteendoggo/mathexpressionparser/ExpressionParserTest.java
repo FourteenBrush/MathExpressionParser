@@ -4,6 +4,7 @@ import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ExpressionParserTest {
@@ -32,9 +33,15 @@ class ExpressionParserTest {
     }
 
     @Test
+    void testOperatorsCombinedWithFunction() {
+        assertDoesNotThrow(() -> ExpressionParser.parse("max(-min(1, 3), 5)"));
+    }
+
+    @Test
     void testThrowingExpressions() {
         assertThrows(null);
         assertThrows(" ");
+        assertThrows("1 1");
         assertThrows("1 +");
         assertThrows("1 + .");
         assertThrows("1 + .1");
@@ -48,6 +55,9 @@ class ExpressionParserTest {
         assertThrows("1..1");
         assertThrows("1..2");
         assertThrows("1..");
+        assertThrows("1.1.1");
+        assertThrows("-1.1.2");
+        assertThrows("1.-1.2");
         assertThrows(".");
         assertThrows("..");
         assertThrows("1. -1");
@@ -79,6 +89,7 @@ class ExpressionParserTest {
         assertThrows("max(1,, 3)");
         assertThrows("max(1, )");
         assertThrows("max(1,)");
+        assertThrows("max(1 1)");
         assertThrows("max(,)");
         assertThrows("max(,,)");
         assertThrows("max((-))");

@@ -13,11 +13,19 @@ public enum Operator implements Token {
     ADDITION('+', 1, Double::sum),
     SUBTRACTION('-', 1, (a, b) -> a - b);
 
-    public static final int HIGHEST_PRIORITY = 3;
+    public static final int HIGHEST_PRIORITY;
 
     private final char symbol;
     private final int priority;
     private final DoubleBinaryOperator solver;
+
+    static {
+        int highestPriority = 0;
+        for (Operator operator : values()) {
+            highestPriority = Math.max(highestPriority, operator.priority);
+        }
+        HIGHEST_PRIORITY = highestPriority;
+    }
 
     Operator(char symbol, int priority, DoubleBinaryOperator solver) {
         this.symbol = symbol;

@@ -134,7 +134,7 @@ public class FunctionContainer {
         if (crawl instanceof FunctionNode fn) {
             return fn.handler;
         }
-        throw new FunctionNotFoundException("only a function with similar name was found");
+        throw new FunctionNotFoundException("only a function with the same start letters was found");
     }
 
     @Override

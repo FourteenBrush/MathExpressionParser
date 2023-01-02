@@ -1,26 +1,23 @@
 package me.fourteendoggo.mathexpressionparser;
 
+import me.fourteendoggo.mathexpressionparser.container.ReadOnlyCharBuffer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import me.fourteendoggo.mathexpressionparser.tokens.Operand;
 
-import java.nio.CharBuffer;
+import java.util.function.IntPredicate;
 
 public class Tokenizer {
     static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.createDefault(); // package-private
-    private final CharBuffer buffer;
+    private final ReadOnlyCharBuffer buffer;
 
-    public Tokenizer(char[] input) {
-        buffer = CharBuffer.wrap(input);
+    public Tokenizer(char[] input, IntPredicate loopCondition) {
+        buffer = new ReadOnlyCharBuffer(input, loopCondition);
     }
 
     public void next() {
         buffer.get();
-    }
-
-    public void move(int steps) {
-        position(position() + steps);
     }
 
     public int position() {
@@ -36,110 +33,78 @@ public class Tokenizer {
     }
 
     public char current() {
-        return buffer.get(position());
+        return buffer.current();
+    }
+
+    public Operand readBrackets() {
+        Expression sub = new Expression(buffer.array(), current -> current != ')');
+        ReadOnlyCharBuffer subBuffer = sub.getTokenizer().buffer;
+
+        subBuffer.position(position() + 1); // we are sure we read an opening bracket, see Expression
+        Operand result = new Operand(sub.parse());
+        subBuffer.expectUnchecked(')', "expected a closing bracket");
+        position(subBuffer.position()); // resume reading behind the closing bracket
+
+        return result;
     }
 
     public Operand readFunction() {
         FunctionCallSite function = FUNCTION_CONTAINER.search(buffer.array(), position());
-        move(function.getLength());
-        Assert.isTrue(hasRemaining() && buffer.get() == '(', "expected '(' after function name");
+        buffer.move(function.getLength()); // skip the function name
+        buffer.expectAndGet('(', "expected opening parenthesis after function name");
 
         FunctionContext parameters = new FunctionContext();
-        // Expression will disallow reading () so we just don't try to read parameters if the minArgs == 0
+        // Expression will disallow reading () so we don't try to read parameters if the minArgs == 0
         if (function.getMinArgs() > 0) {
             Expression sub = new Expression(buffer.array(), current -> current != ',' && current != ')');
-            Tokenizer tokenizer = sub.getTokenizer();
-            tokenizer.position(position()); // modify their position to start reading behind the '('
+            ReadOnlyCharBuffer subBuffer = sub.getTokenizer().buffer;
+            subBuffer.position(position()); // let them start reading the parameter list
 
-            readParameterList(parameters, sub, tokenizer);
+            readParameterList(parameters, sub, subBuffer);
         }
-        Assert.isTrue(hasRemaining() && buffer.get() == ')', "expected ')' after function parameter list");
+        buffer.expectAndGet(')', "expected closing parenthesis after function parameters");
 
         return new Operand(function.apply(parameters));
     }
 
-    private void readParameterList(FunctionContext source, Expression sub, Tokenizer tokenizer) {
-        source.add(sub.parse());
+    private void readParameterList(FunctionContext output, Expression sub, ReadOnlyCharBuffer subBuffer) {
+        output.add(sub.parse());
 
-        while (tokenizer.hasRemaining() && tokenizer.current() == ',') {
-            int oldPos = tokenizer.position();
-            // parse individual parameter
-            sub = new Expression(buffer.array(), current -> current != ',' && current != ')');
-            tokenizer = sub.getTokenizer();
-            tokenizer.position(oldPos + 1); // move behind the ','
-            source.add(sub.parse());
+        while (subBuffer.hasRemainingUnchecked() && subBuffer.current() == ',') {
+            int oldPosition = subBuffer.position();
+
+            sub = new Expression(subBuffer.array(), current -> current != ',' && current != ')');
+            subBuffer = sub.getTokenizer().buffer;
+
+            subBuffer.position(oldPosition + 1);
+            output.add(sub.parse());
         }
-        position(tokenizer.position()); // update our position to the ')'
+        position(subBuffer.position());
     }
 
-    public Operand readOperand() {
-        return readOperand('0');
-    }
-
-    public Operand readOperand(char firstChar) {
-        double value = readDouble(firstChar);
+    public Operand readOperand(char firstNumber, boolean negative) {
+        double value = readDouble(firstNumber, negative);
         return new Operand(value);
     }
 
-    /**
-     * @see Tokenizer#readDouble(char)
-     */
-    public double readDouble() {
-        return readDouble('0');
-    }
-
-    /**
-     * Attempts to read a double from the internal buffer, starting at {@link #position()}
-     * and therefore moving the position forward to the end position of the double + 1. <br/>
-     * If we reached the end of the buffer, or it doesn't contain a number, 0.0 is returned.
-     * @param firstChar the first character that is already been read (see {@link Expression#parse()})
-     * @return the double read from the buffer or 0.0 if no double was found
-     */
-    public double readDouble(char firstChar) {
-        IntResult beforeComma = readInt0(firstChar);
-        int beforeCommaValue = beforeComma.value();
-        if (!hasRemaining() || current() != '.') {
-            return beforeCommaValue;
+    private double readDouble(char firstNumber, boolean negative) {
+        IntResult beforeComma = readInt0(firstNumber, negative);
+        if (!buffer.hasAndGet('.')) { // skips decimal point if one was present
+            return beforeComma.value();
         }
 
-        next(); // skip the decimal point
-        IntResult behindComma = readInt0();
-        Assert.isFalse(behindComma.isBlank(), "read a decimal point but no value comes behind it");
-        // fix 1.-1 TODO: might want to use a #readUnsignedInt to read the fractional part
-        Assert.isFalse(behindComma.negative(), "a fractional part of a number cannot be negative");
-        // always unsigned
-        double decimalPart = behindComma.value() / (double) behindComma.decimalDivider();
-        // fix -0.25 being read as 0.25 and -1.25 being read as -0.75
-        // when the beforeCommaValue is 0, we cant check < 0 because -0 doesn't exist
-        if (beforeCommaValue < 0 || beforeComma.negative()) {
-            decimalPart *= -1;
+        double decimalPart = readDecimalPart();
+
+        if (beforeComma.negative()) {
+            return beforeComma.value() - decimalPart;
         }
-        return beforeCommaValue + decimalPart;
+        return beforeComma.value() + decimalPart;
     }
 
-    // TODO: use this for optimisation purposes
-    // might actually use a a custom functions with readDouble() instead
-    /**
-     * Attempts to read an integer from the internal buffer
-     * If we couldn't read anything or there is no number, we return a 0
-     * This positions our {@link #position()} right after the end of the integer
-     *
-     * @return the integer read from the buffer or 0 if no integer could be read
-     */
-    public int readInt() {
-        // let's not copy that readInt0() method twice
-        IntResult result = readInt0();
-        return result.value();
-    }
-
-    private IntResult readInt0() {
-        return readInt0('0');
-    }
-
-    private IntResult readInt0(char firstChar) {
-        boolean negative = false;
-        int result = firstChar - '0';
-        int decimalDivider = result > 0 ? 10 : 1;
+    private IntResult readInt0(char firstNumber, boolean negative) {
+        int result = firstNumber - '0';
+        // TODO: this isn't used anymore but we still need a way to ensure something is read
+        int decimalDivider = firstNumber >= '0' && firstNumber <= '9' ? 10 : 1;
 
         loop: while (hasRemaining()) {
             char current = current();
@@ -154,7 +119,7 @@ public class Tokenizer {
                         break loop;
                     }
                     negative = true;
-                    next(); // consume the '-' character
+                    next(); // consume the negative sign
                     continue; // do not change decimalDivider because this is just a negative sign and not a part of a number
                 }
                 default -> {
@@ -165,9 +130,31 @@ public class Tokenizer {
             decimalDivider *= 10;
         }
         // fix -.1 being read as -0.1
+        // TODO: decimal divider overflow issue when the number became very big/ small causes this to trigger sometimes
         Assert.isTrue(decimalDivider > 1, "no value comes behind the negative sign");
         // see IntResult for more info why we don't do negative ? -result : result
         return new IntResult(result, negative, decimalDivider);
+    }
+
+    private double readDecimalPart() {
+        int oldPos = position();
+        double result = 0;
+        long divider = 10;
+
+        loop: while (hasRemaining()) {
+            char current = current();
+            switch (current) {
+                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
+                    int value = current - '0';
+                    result += (double) value / divider;
+                    divider *= 10;
+                    next(); // consume character
+                }
+                default -> { break loop; }
+            }
+        }
+        Assert.isTrue(position() > oldPos, "could not read the decimal part of a number");
+        return result;
     }
 
     @Override
@@ -180,6 +167,7 @@ public class Tokenizer {
      * This is used by internal methods to handle the fractional part of a double
      *
      * @param value the value of the integer read
+     * @param negative a redundant way to check whether the value is negative, because the value might be 0
      * @param decimalDivider the result of {@code Math.pow(10, String.valueOf(value).length())} <br/>
      *                       To decide how big the fractional part of a number should be <br/>
      *                       (e.g. 0.25 would be value: 25 / decimalDivider: 100)
@@ -188,11 +176,6 @@ public class Tokenizer {
         @Override
         public int value() {
             return negative ? -value : value;
-        }
-
-        public boolean isBlank() {
-            // 1 as decimalDivider (initial position) means that we did not read any numbers
-            return value == 0 && decimalDivider == 1;
         }
     }
 }
