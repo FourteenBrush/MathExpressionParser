@@ -49,12 +49,6 @@ public class Expression {
                     } else {
                         throw new SyntaxException("invalid position for negative sign");
                     }
-
-                    switch (tokens.getLastType()) {
-                        case OPERATOR -> appendOperand('0', false);
-                        case OPERAND -> appendToken(Operator.SUBTRACTION);
-                        default -> throw new SyntaxException("invalid position for negative sign");
-                    }
                 }
                 case '(' -> {
                     // replace things like 2(3+4) with 2*(3+4)
