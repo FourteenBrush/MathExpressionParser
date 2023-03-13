@@ -7,7 +7,6 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.Scanner;
-import java.util.function.DoubleSupplier;
 
 public class Main {
 
@@ -18,37 +17,24 @@ public class Main {
         //benchmark();
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     private static void executeNormally() {
         Scanner in = new Scanner(System.in);
-        boolean firstRun = true;
 
         while (true) {
-            System.out.print("Enter an expression or type 'exit' to exit: ");
+            System.out.print("Enter an expression or type exit() to exit: ");
             String input = in.nextLine();
-            if (input.equals("exit")) break;
-
-            if (firstRun) {
-                //parse(() -> eval(input), "Result: %s (%d µs) (eval) (unoptimized)%n");
-                parse(() -> ExpressionParser.parse(input), "Result: %s (%d µs) (ExpressionParser) (unoptimized)%n");
-                firstRun = false;
-            } else {
-                //parse(() -> eval(input), "Result: %s (%d µs) (eval) (optimized)%n");
-                parse(() -> ExpressionParser.parse(input), "Result: %s (%d µs) (ExpressionParser) (optimized)%n");
+            long now = System.nanoTime();
+            double result;
+            try {
+                result = ExpressionParser.parse(input);
+            } catch (Throwable t) {
+                System.out.println("\u001B[31m[✘] Error: " + t.getMessage() + "\u001B[0m");
+                continue;
             }
+            double elapsedMicros = (System.nanoTime() - now) / 1000.0;
+            System.out.printf("[✔] Result: %s (%s µs)%n", result, elapsedMicros);
         }
-    }
-
-    private static void parse(DoubleSupplier parser, String formatString) {
-        long now = System.nanoTime();
-        double result = 0;
-        try {
-            result = parser.getAsDouble();
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
-        }
-        long elapsedMicros = (System.nanoTime() - now) / 1000;
-        System.out.printf(formatString, result, elapsedMicros);
     }
 
     private static void benchmark() throws RunnerException {

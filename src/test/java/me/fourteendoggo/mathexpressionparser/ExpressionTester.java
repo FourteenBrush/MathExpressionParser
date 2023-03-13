@@ -1,46 +1,42 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class ExpressionTester {
 
     public static void main(String[] args) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/test/tests.txt"));
-             BufferedWriter writer = new BufferedWriter(new FileWriter("src/test/results.txt"))) {
-            String expression, expectedResult;
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get("src", "test", "tests.txt"));
+             BufferedWriter writer = Files.newBufferedWriter(Paths.get("src", "test", "results.txt"))) {
+            String expression;
             int errors = 0;
             while ((expression = reader.readLine()) != null) {
-                if (expression.isEmpty() || expression.startsWith("#")) continue;
-                expectedResult = reader.readLine();
-                double result;
+                if (expression.isBlank() || expression.startsWith("#")) continue;
 
+                String expectedResult = reader.readLine();
+                double result;
                 try {
                     result = ExpressionParser.parse(expression);
-                } catch (Throwable e) {
+                } catch (Throwable t) {
                     errors++;
-                    writer.write(format("Expression '%s' threw an %s, error message: %s\n",
-                            expression, e.getClass().getSimpleName(), e.getMessage()));
+                    writer.write("Expression %s threw an %s, error message: %s%n".formatted(expression, t.getClass().getSimpleName(), t.getMessage()));
                     continue;
                 }
 
-                // for some reason I can't longer rely on new Tokenizer(expectedResult.toCharArray()).readDouble()
                 double expected = new Expression(expectedResult.toCharArray()).parse();
                 if (result != expected) {
                     errors++;
-                    writer.write(format("Expression '%s' returned %.10f, expected %.10f\n",
-                            expression, result, expected));
+                    writer.write("Expression %s returned %.8f instead of %.8f%n".formatted(expression, result, expected));
                 }
             }
-
             if (errors == 0) {
-                System.out.println("All tests passed");
+                System.out.println("✅ All tests passed");
             } else {
-                System.out.println(errors + " tests failed, results got written to results.txt");
+                System.out.println("❌ " + errors + " tests failed, results got written to results.txt");
             }
         }
-    }
-
-    static String format(String input, Object... args) {
-        return input.formatted(args);
     }
 }

@@ -3,6 +3,7 @@ package me.fourteendoggo.mathexpressionparser;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
+import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
@@ -21,7 +22,7 @@ public class ExpressionParser {
      */
     public static double parse(String input) {
         Assert.notNull(input, "input was null");
-        Assert.notBlank(input);
+        Assert.isFalse(input.isEmpty(), "empty input");
 
         return new Expression(input.toCharArray()).parse();
     }
@@ -49,5 +50,13 @@ public class ExpressionParser {
      */
     public static void insertFunction(String functionName, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> function) {
         Tokenizer.FUNCTION_CONTAINER.insertFunction(new FunctionCallSite(functionName, minArgs, maxArgs, function));
+    }
+
+    /**
+     * Inserts a complex function
+     * @param function the function to insert
+     */
+    public static void insertFunction(FunctionCallSite function) {
+        Tokenizer.FUNCTION_CONTAINER.insertFunction(function);
     }
 }

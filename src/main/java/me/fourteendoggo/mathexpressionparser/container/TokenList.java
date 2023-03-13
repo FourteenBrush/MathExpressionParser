@@ -1,49 +1,38 @@
 package me.fourteendoggo.mathexpressionparser.container;
 
-import me.fourteendoggo.mathexpressionparser.Assert;
-import me.fourteendoggo.mathexpressionparser.Token;
-import me.fourteendoggo.mathexpressionparser.TokenType;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.tokens.Operand;
 import me.fourteendoggo.mathexpressionparser.tokens.Operator;
-
-import java.util.Objects;
+import me.fourteendoggo.mathexpressionparser.tokens.Token;
+import me.fourteendoggo.mathexpressionparser.tokens.TokenType;
+import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 public class TokenList {
-    // pointer represents the calculation we are currently constructing, acts as a tail
-    private LinkedCalculation head, pointer;
-    private TokenType lastType;
+    private LinkedCalculation head, tail;
+    private TokenType lastType = TokenType.OPERATOR;
     private int numCalculations;
 
-    public void addToken(Token token) {
-        validateIncomingType(token.getType());
+    public void pushToken(Token token) {
+        checkType(token.getType());
         lastType = token.getType();
 
-        if (pointer == null) {
-            LinkedCalculation calculation = new LinkedCalculation((Operand) token);
-            pointer = calculation;
-            head = calculation;
-            numCalculations++;
-        } else if (pointer.isComplete()) {
-            if (pointer.simplify()) {
-                // pointer only contains a left operand and an operator now
-                pointer.addToken(token);
-            } else {
-                // pointer is a complete calculation, but it was not simplified
-                pointer.next = new LinkedCalculation(pointer, (Operator) token);
-                pointer = pointer.next;
+        if (tail != null) {
+            if (tail.isComplete() && !tail.simplify()) {
+                tail.next = new LinkedCalculation(tail, (Operator) token);
+                tail = tail.next;
                 numCalculations++;
             }
+            tail.pushToken(token);
         } else {
-            pointer.addToken(token);
+            tail = new LinkedCalculation((Operand) token);
+            head = tail;
+            numCalculations++;
         }
     }
 
-    public void validateIncomingType(TokenType type) {
-        TokenType testWith = Objects.requireNonNullElse(lastType, TokenType.OPERATOR);
-        if (testWith != type) return;
+    private void checkType(TokenType type) {
+        if (lastType != type) return;
 
-        // prepare throwing exception
         String message = switch (type) {
             case OPERAND -> "expected operator, got operand";
             case OPERATOR -> "expected operand, got operator";
@@ -52,37 +41,38 @@ public class TokenList {
     }
 
     /**
-     * Solves the expression represented by this token list <br/>
-     * Simple expressions like 1+1 or 1*3+1 will be solved in one pass
+     * Solves the expression represented by this token list. <br/>
+     * Simple expressions like 1+1 or 1*3+1 will be solved in one pass.
      * <h2>Algorithm explained:</h2>
      * The algorithm works with a linked list of calculations, each calculation object is a
      * wrapper for an operator and its surrounding operands, this causes overlapping with operands but is perfectly fine <br/>
      * <p/>
-     * To solve, we start at the head of the list and take two calculations <br/>
-     * If the first calculation has an operator with a higher or the same priority
+     * To solve, we start at the head of the list and take two calculations. <br/>
+     * If the first calculation has an operator with a higher or the same priority,
      * we can safely solve the first calculation and apply its result to the left of the second calculation
-     * and unlink that first calculation<br/>
-     * Visually this would look like this: <br/>
+     * and unlink that first calculation. <br/>
+     * For example: <br/>
      * <p/>
-     * Expression before: 2 + 3 * 4 <br/>
-     * Transformed to calculations: [2+3] -> [3*4] <br/>
-     * Result calculation after applying this algorithm would be: [2+12]
+     * Expression before: 3 * 4 + 2 <br/>
+     * Transformed to calculations: [3 * 4] <-> [4 + 2]</-> <br/>
+     * Resulting calculation after applying this algorithm would be: [12 + 2]
      * <p/>
-     * This algorithm is repeated until there is only one calculation left, which is then solved and returned <br/>
+     * This algorithm is repeated until there is only one calculation left, which is then solved and returned. <br/>
      * This might involve looping multiple times over the expression, keeping higher priority operators
-     * at the beginning reduces this overhead because the first calculation can always be solved
+     * at the beginning reduces this overhead because the first calculation can always be solved.
      *
      * @return the result of the expression
      */
     public double solve() {
         return switch (numCalculations) {
-            case 1 -> head.solveOrThrow();
+            case 0 -> throw new SyntaxException("cannot solve an empty expression");
+            case 1 -> head.tryToSolve();
             case 2 -> {
                 LinkedCalculation first = head;
                 LinkedCalculation second = first.next;
 
                 // x op y op was previously throwing a npe
-                Assert.notNull(second.right, "unexpected operator at end");
+                Assert.notNull(second.right, "unexpected operator at the end");
 
                 if (first.mayExecuteFirst()) {
                     // 2*3+2
@@ -96,8 +86,6 @@ public class TokenList {
                 yield first.operator.apply(firstOperand, secondOperand);
             }
             default -> {
-                // throw an exception for '()'
-                Assert.isFalse(numCalculations == 0, "cannot solve an empty expression");
                 while (numCalculations > 1) {
                     shorten();
                 }
@@ -123,7 +111,7 @@ public class TokenList {
                 numCalculations--;
                 // we may have a left neighbour which didn't get executed yet because its operator priority is lower than ours
                 if (prev == null) {
-                    // looks like we are head, and we are about to be unlinked, change head to next just in case we fuck up
+                    // looks like we are head, and we are about to be unlinked, change head to next
                     head = next;
                     continue;
                 }
@@ -155,7 +143,7 @@ public class TokenList {
             return "[]";
         }
 
-        StringBuilder builder = new StringBuilder(numCalculations * 15); // whatever
+        StringBuilder builder = new StringBuilder();
         builder.append('[');
 
         for (LinkedCalculation node = head; node != null; node = node.next) {
@@ -164,15 +152,14 @@ public class TokenList {
             }
             builder.append(node);
         }
-        builder.append(']');
-        return builder.toString();
+        return builder.append(']').toString();
     }
 
     /**
-     * A linked list of calculations, dynamically constructed as tokens are added<br/>
-     * Tokens are added linearly, so the list is always in the order of the input<br/>
+     * A linked list of calculations, dynamically constructed as tokens are added.<br/>
+     * Tokens are added linearly, so the list is always in the order of the input.<br/>
      * Each calculation added to the {@link TokenList} is supposed to have valid tokens,
-     * only {@link TokenList#pointer} may be incomplete, meaning it is still being constructed
+     * only {@link TokenList#tail} may be incomplete, meaning it is still being constructed
      */
     private static class LinkedCalculation {
         private LinkedCalculation prev, next;
@@ -184,6 +171,7 @@ public class TokenList {
             this(prev, prev.right);
             this.operator = operator;
             // might want to call clone() on prev.right because Operand is mutable
+            // current solving algorithm doesn't cause any issues with it yet
         }
 
         public LinkedCalculation(LinkedCalculation prev, Operand left) {
@@ -200,13 +188,11 @@ public class TokenList {
             return operator.getPriority() >= next.operator.getPriority();
         }
 
-        public void addToken(Token token) {
-            // no need to check if right == null because isComplete is checked first
+        public void pushToken(Token token) {
             switch (token.getType()) {
                 case OPERAND -> right = (Operand) token;
                 case OPERATOR -> operator = (Operator) token;
             }
-            // ignore other cases
         }
 
         public boolean isComplete() {
@@ -224,26 +210,26 @@ public class TokenList {
         }
 
         public double solve() {
-            // no need to check if isComplete() is true, because this method is only called when it is
             return operator.apply(left, right);
         }
 
         // some support to work with incomplete calculations f.e. [3,null,null] (3)
-        public double solveOrThrow() {
-            // left != null, operator != null, right != null
-            if (isComplete()) { // give priority to solving the calculation rather than returning only the left operand
-                return solve();
+        public double tryToSolve() {
+            if (operator == null) {
+                return left.getValue();
             }
-            Assert.isNull(operator, "unable to solve calculation of form 'x operator'");
-
-            return left.getValue();
+            Assert.notNull(right, "unexpected operator at the end");
+            return solve();
         }
 
         @Override
         public String toString() {
-            return "{" + left.getValue() + ',' +
-                    (operator != null ? operator.getSymbol() : "null") + ',' +
-                    (right != null ? right.getValue() : "null") + '}';
+            if (operator == null) { // right also null
+                return "{" + left + "}";
+            } else if (right == null) { // only right null
+                return "{" + left + ", " + operator.getSymbol() + "}";
+            }
+            return "{" + left + ", " + operator + ", " + right + "}";
         }
     }
 }

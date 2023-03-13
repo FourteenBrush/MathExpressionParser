@@ -1,180 +1,203 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.container.ReadOnlyCharBuffer;
+import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import me.fourteendoggo.mathexpressionparser.tokens.Operand;
+import me.fourteendoggo.mathexpressionparser.utils.Assert;
+import me.fourteendoggo.mathexpressionparser.utils.CharConsumer;
+import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.function.IntPredicate;
 
 public class Tokenizer {
-    static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.createDefault(); // package-private
-    private final ReadOnlyCharBuffer buffer;
+    static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.withDefaultFunctions();
+    static final char NULL_CHAR = '\0';
+    private final char[] input;
+    private final IntPredicate loopCondition;
+    private int pos;
 
     public Tokenizer(char[] input, IntPredicate loopCondition) {
-        buffer = new ReadOnlyCharBuffer(input, loopCondition);
+        this.input = input;
+        this.loopCondition = loopCondition;
     }
 
     public void next() {
-        buffer.get();
-    }
-
-    public int position() {
-        return buffer.position();
-    }
-
-    public boolean hasRemaining() {
-        return buffer.hasRemaining();
-    }
-
-    public void position(int pos) {
-        buffer.position(pos);
+        pos++;
     }
 
     public char current() {
-        return buffer.current();
+        return input[pos];
+    }
+
+    public void forEachRemaining(CharConsumer consumer) {
+        while (pos < input.length && loopCondition.test(input[pos])) {
+            consumer.accept(input[pos]);
+        }
+    }
+
+    public boolean hasAndGet(char expected) {
+        if (pos < input.length && current() == expected) {
+            next();
+            return true;
+        }
+        return false;
+    }
+
+    public void expectAndGet(char expected, String exceptionMessage) {
+        Assert.isTrue(pos < input.length && current() == expected, exceptionMessage);
+        pos++;
     }
 
     public Operand readBrackets() {
-        Expression sub = new Expression(buffer.array(), current -> current != ')');
-        ReadOnlyCharBuffer subBuffer = sub.getTokenizer().buffer;
+        Expression sub = new Expression(input, Utility::isBetweenBrackets);
+        Tokenizer subTokenizer = sub.getTokenizer();
 
-        subBuffer.position(position() + 1); // we are sure we read an opening bracket, see Expression
+        subTokenizer.pos = pos + 1; // enter expression, we are sure we read an opening parenthesis
         Operand result = new Operand(sub.parse());
-        subBuffer.expectUnchecked(')', "expected a closing bracket");
-        position(subBuffer.position()); // resume reading behind the closing bracket
+        pos = subTokenizer.pos; // resume reading behind the closing parenthesis
+        Assert.isTrue(pos < input.length && current() == ')', "missing closing parenthesis");
 
         return result;
     }
 
     public Operand readFunction() {
-        FunctionCallSite function = FUNCTION_CONTAINER.search(buffer.array(), position());
-        buffer.move(function.getLength()); // skip the function name
-        buffer.expectAndGet('(', "expected opening parenthesis after function name");
+        FunctionCallSite function = FUNCTION_CONTAINER.getFunction(input, pos);
+        pos += function.getName().length(); // skip function name
+        expectAndGet('(', "missing opening parenthesis");
 
-        FunctionContext parameters = new FunctionContext();
-        // Expression will disallow reading () so we don't try to read parameters if the minArgs == 0
-        if (function.getMinArgs() > 0) {
-            Expression sub = new Expression(buffer.array(), current -> current != ',' && current != ')');
-            ReadOnlyCharBuffer subBuffer = sub.getTokenizer().buffer;
-            subBuffer.position(position()); // let them start reading the parameter list
+        FunctionContext parameters = function.allocateParameters();
+        // only read parameters if the function supports it or if there are optional parameters filled in
+        // if current points to anything other than a closing parenthesis, we know we got a parameter
+        if (function.hasArgs()) {
+            Expression parameter = new Expression(input, Utility::isValidArgument);
+            parameter.getTokenizer().pos = pos; // position them to read the first parameter
 
-            readParameterList(parameters, sub, subBuffer);
+            readParameterList(parameters, parameter);
+        } else if (pos < input.length && current() != ')') {
+            throw new SyntaxException("did not expect any parameters for function " + function.getName());
         }
-        buffer.expectAndGet(')', "expected closing parenthesis after function parameters");
+        expectAndGet(')', "missing closing parenthesis");
 
         return new Operand(function.apply(parameters));
     }
 
-    private void readParameterList(FunctionContext output, Expression sub, ReadOnlyCharBuffer subBuffer) {
-        output.add(sub.parse());
+    private void readParameterList(FunctionContext parameters, Expression parameter) {
+        parameters.add(parameter.parse());
+        Tokenizer tokenizer = parameter.getTokenizer();
 
-        while (subBuffer.hasRemainingUnchecked() && subBuffer.current() == ',') {
-            int oldPosition = subBuffer.position();
+        while (tokenizer.pos < tokenizer.input.length && tokenizer.current() == ',') {
+            int oldPos = tokenizer.pos;
 
-            sub = new Expression(subBuffer.array(), current -> current != ',' && current != ')');
-            subBuffer = sub.getTokenizer().buffer;
+            parameter = new Expression(input, Utility::isValidArgument);
+            tokenizer = parameter.getTokenizer();
 
-            subBuffer.position(oldPosition + 1);
-            output.add(sub.parse());
+            tokenizer.pos = oldPos + 1;
+            parameters.add(parameter.parse());
         }
-        position(subBuffer.position());
+        pos = tokenizer.pos;
     }
 
-    public Operand readOperand(char firstNumber, boolean negative) {
-        double value = readDouble(firstNumber, negative);
+    public Operand readOperand(char firstDigit, boolean negative) {
+        double value = readDouble(firstDigit, negative);
         return new Operand(value);
     }
 
-    private double readDouble(char firstNumber, boolean negative) {
-        IntResult beforeComma = readInt0(firstNumber, negative);
-        if (!buffer.hasAndGet('.')) { // skips decimal point if one was present
-            return beforeComma.value();
+    private double readDouble(char firstDigit, boolean negative) {
+        IntResult beforeComma = readInt(firstDigit, negative);
+        if (!hasAndGet('.')) { // skips decimal point if present
+            beforeComma.alignState();
+            return beforeComma.getValue();
         }
 
         double decimalPart = readDecimalPart();
+        beforeComma.alignState();
 
-        if (beforeComma.negative()) {
-            return beforeComma.value() - decimalPart;
+        if (beforeComma.negative) {
+            return beforeComma.getValue() - decimalPart;
         }
-        return beforeComma.value() + decimalPart;
+        return beforeComma.getValue() + decimalPart;
     }
 
-    private IntResult readInt0(char firstNumber, boolean negative) {
-        int result = firstNumber - '0';
-        // TODO: this isn't used anymore but we still need a way to ensure something is read
-        int decimalDivider = firstNumber >= '0' && firstNumber <= '9' ? 10 : 1;
+    private IntResult readInt(char firstDigit, boolean negative) {
+        IntResult res = new IntResult(negative);
+        if (firstDigit != NULL_CHAR) {
+            res.push(firstDigit);
+        }
 
-        loop: while (hasRemaining()) {
+        loop: while (pos < input.length) {
             char current = current();
             switch (current) {
-                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> result = result * 10 + (current - '0');
+                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> res.push(current);
                 case '-' -> {
-                    // we already have a negative sign, and no number (decimalDivider being its initial value)
-                    Assert.isFalse(negative && decimalDivider == 1, "cannot have two negative signs in a row");
-
-                    if (decimalDivider > 1) {
-                        // encountered a subtraction operator (-x - ...)
-                        break loop;
-                    }
-                    negative = true;
-                    next(); // consume the negative sign
-                    continue; // do not change decimalDivider because this is just a negative sign and not a part of a number
+                    if (!res.empty) break loop;
+                    res.setNegative();
                 }
-                default -> {
-                    break loop;
-                }
+                default -> { break loop; }
             }
-            next(); // consume the character
-            decimalDivider *= 10;
+            pos++; // consume character
         }
-        // fix -.1 being read as -0.1
-        // TODO: decimal divider overflow issue when the number became very big/ small causes this to trigger sometimes
-        Assert.isTrue(decimalDivider > 1, "no value comes behind the negative sign");
-        // see IntResult for more info why we don't do negative ? -result : result
-        return new IntResult(result, negative, decimalDivider);
+        return res;
     }
 
     private double readDecimalPart() {
-        int oldPos = position();
+        int oldPos = pos;
         double result = 0;
         long divider = 10;
 
-        loop: while (hasRemaining()) {
+        loop: while (pos < input.length) {
             char current = current();
             switch (current) {
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                     int value = current - '0';
                     result += (double) value / divider;
                     divider *= 10;
-                    next(); // consume character
+                    pos++; // consume character
                 }
                 default -> { break loop; }
             }
         }
-        Assert.isTrue(position() > oldPos, "could not read the decimal part of a number");
+        Assert.isTrue(pos > oldPos, "could not read the decimal part of a number");
         return result;
     }
 
     @Override
     public String toString() {
-        return "Tokenizer{buffer=" + buffer + '}';
+        return new String(input, pos, input.length - pos);
     }
 
-    /**
-     * The result of an attempted try to read an integer from the buffer
-     * This is used by internal methods to handle the fractional part of a double
-     *
-     * @param value the value of the integer read
-     * @param negative a redundant way to check whether the value is negative, because the value might be 0
-     * @param decimalDivider the result of {@code Math.pow(10, String.valueOf(value).length())} <br/>
-     *                       To decide how big the fractional part of a number should be <br/>
-     *                       (e.g. 0.25 would be value: 25 / decimalDivider: 100)
-     */
-    private record IntResult(int value, boolean negative, int decimalDivider) {
-        @Override
-        public int value() {
+    private class IntResult {
+        private int value;
+        private boolean negative; // if we have a negative sign before the number
+        private boolean empty; // an absence of a number, meaning we haven't read any numbers
+
+        public IntResult(boolean negative) {
+            this.negative = negative;
+            this.empty = true;
+        }
+
+        public void setNegative() {
+            Assert.isFalse(negative, "cannot have two negative signs in a row");
+            negative = true;
+        }
+
+        public void push(char digit) {
+            value = value * 10 + (digit - '0');
+            empty = false;
+        }
+
+        // support for -func() syntax
+        public void alignState() {
+            if (!empty) return;
+            Assert.isTrue(pos < input.length && Utility.isLowercaseLetter(input[pos]), "expected a number");
+            // if there's a function after the - sign, change our value to -1 to do -1 * func()
+            // negative is true, otherwise we wouldn't be here, so actual value is -1
+            value = 1;
+        }
+
+        // -0 might not work, that's why the tokenizer checks the negative flag
+        public int getValue() {
             return negative ? -value : value;
         }
     }

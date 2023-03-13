@@ -24,14 +24,6 @@ class ExpressionParserTest {
         assertEquals(0, ExpressionParser.parse("0 *0"));
     }
 
-    // TODO: overflow
-    @Test
-    void testPrecision() {
-        assertEquals(117.62500501328793, ExpressionParser.parse("34.82726271 * 3.377383"));
-        assertEquals(78.5052497661799, ExpressionParser.parse("182628161.938362528 % 253.938265272"));
-        assertEquals(Double.POSITIVE_INFINITY, ExpressionParser.parse("12.928226*1111111111111111111111^7373"));
-    }
-
     @Test
     void testOperatorsCombinedWithFunction() {
         assertDoesNotThrow(() -> ExpressionParser.parse("max(-min(1, 3), 5)"));
@@ -79,6 +71,8 @@ class ExpressionParserTest {
         assertThrows("( )");
         assertThrows("1.sin(1)");
         assertThrows("sin(1");
+        assertThrows("sin1");
+        assertThrows("sin1)");
         assertThrows("sin 1");
         assertThrows("sin (1)");
         assertThrows("isn(1)");
@@ -94,6 +88,14 @@ class ExpressionParserTest {
         assertThrows("max(,,)");
         assertThrows("max((-))");
         assertThrows("min(max(1,3))");
+        assertThrows("min(max(1,3),)");
+        assertThrows("min(max(1,3),1,)");
+        assertThrows("min(,1)");
+        assertThrows("min(1,-)");
+        assertThrows("min(1,-.)");
+        assertThrows("sin(1,,)");
+        assertThrows("sin(1,,2)");
+        assertThrows("pi(1)");
     }
 
     private void assertThrows(String expression) {

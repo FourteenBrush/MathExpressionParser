@@ -1,11 +1,12 @@
 package me.fourteendoggo.mathexpressionparser.function;
 
-import me.fourteendoggo.mathexpressionparser.Assert;
+import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 import java.util.function.ToDoubleFunction;
 
 /**
  * A placeholder for an invokable function.
+ * @see FunctionContext
  */
 public class FunctionCallSite {
     private final String name;
@@ -20,7 +21,7 @@ public class FunctionCallSite {
         if (minArgs < 0 || maxArgs < 0 || minArgs > maxArgs) {
             throw new IllegalArgumentException("minArgs must be >= 0, maxArgs must be >= 0 and minArgs must be <= maxArgs");
         }
-        this.name = name.trim();
+        this.name = name.trim().toLowerCase();
         this.minArgs = minArgs;
         this.maxArgs = maxArgs;
         this.function = function;
@@ -30,18 +31,19 @@ public class FunctionCallSite {
         return name;
     }
 
-    public int getMinArgs() {
-        return minArgs;
+    public boolean hasArgs() {
+        return minArgs > 0 || maxArgs > 0;
     }
 
-    public int getLength() {
-        return name.length();
+    public FunctionContext allocateParameters() {
+        // I'd rather not allocate a double array of Integer.MAX_VALUE size
+        return new FunctionContext(Math.min(maxArgs, 20));
     }
 
     public double apply(FunctionContext context) {
-        int argsLength = context.size();
-        Assert.isTrue(argsLength >= minArgs, "not enough arguments provided (" + argsLength + " < " + minArgs + ")");
-        Assert.isTrue(argsLength <= maxArgs, "too many arguments provided (" + argsLength + " > " + maxArgs + ")");
+        int providedArgs = context.size();
+        Assert.isFalse(providedArgs < minArgs, "not enough arguments provided (expected %s, got %s)", minArgs, providedArgs);
+        Assert.isFalse(providedArgs > maxArgs, "too many arguments provided (max %s, got %s)", maxArgs, providedArgs);
 
         return function.applyAsDouble(context);
     }

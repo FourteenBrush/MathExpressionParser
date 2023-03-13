@@ -1,4 +1,4 @@
-package me.fourteendoggo.mathexpressionparser;
+package me.fourteendoggo.mathexpressionparser.tokens;
 
 public interface Token {
 

@@ -1,10 +1,8 @@
 package me.fourteendoggo.mathexpressionparser.tokens;
 
-import me.fourteendoggo.mathexpressionparser.Token;
-import me.fourteendoggo.mathexpressionparser.TokenType;
-
 import java.util.function.DoubleBinaryOperator;
 
+// TODO: bitwise operators
 public enum Operator implements Token {
     POWER('^', 3, Math::pow),
     MULTIPLICATION('*', 2, (a, b) -> a * b),
@@ -38,10 +36,16 @@ public enum Operator implements Token {
         return TokenType.OPERATOR;
     }
 
+    /**
+     * @return the symbol representing this operator
+     */
     public char getSymbol() {
         return symbol;
     }
 
+    /**
+     * @return the priority of the operator, between 1 and {@link #HIGHEST_PRIORITY}, higher priority will be executed first
+     */
     public int getPriority() {
         return priority;
     }
@@ -56,6 +60,6 @@ public enum Operator implements Token {
 
     @Override
     public String toString() {
-        return "Operator(" + name().toLowerCase() + ')';
+        return String.valueOf(symbol);
     }
 }

@@ -61,6 +61,8 @@ double result = ExpressionParser.parse("pi()");
 assert result == Math.PI;
 ```
 
+For more complex functions, take a look at the method that accepts a [FunctionCallSite](src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
+
 Functions are called like regular methods in Java and can also be nested, for example:
 
 ```java
@@ -70,34 +72,34 @@ assert result == 1;
 ```
 
 ```java
-// 2min(1,2) is the same as 2*min(1,2)
+// 2min(1, 2) is the same as 2 * min(1, 2)
 double result = ExpressionParser.parse("2min(1, 2, 3, 4, 5)");
 assert result == 2;
 ```
 
 ### Operators
 
-| Operator | Example | Explanation                                               |
-|:--------:|---------|-----------------------------------------------------------|
-|    ^     | 2 ^ 3   | 2 to the power of 3                                       |
-|    *     | 2 * 3   | 2 multiplied by 3                                         |
-|    /     | 2 / 3   | 2 divided by 3                                            |
-|    %     | 2 % 3   | remainder of 2 divided by 3 (modulo)                      |
-|    +     | 2 + 3   | adds 2 and 3 together                                     |
-|    -     | 2 - 3   | subtracts 2 and 3 or negates a number when placed like -x |
+| Operator | Example | Explanation                          |
+|:--------:|---------|--------------------------------------|
+|    ^     | 2 ^ 3   | 2 to the power of 3                  |
+|    *     | 2 * 3   | 2 multiplied by 3                    |
+|    /     | 2 / 3   | 2 divided by 3                       |
+|    %     | 2 % 3   | remainder of 2 divided by 3 (modulo) |
+|    +     | 2 + 3   | adds 2 and 3 together                |
+|    -     | 2 - 3   | subtracts 2 and 3                    |
 
-Take a look at the [Operator enum](src/main/java/me/fourteendoggo/mathexpressionparser/tokens/Operator.java) for more information.
+Take a look at the [Operator](src/main/java/me/fourteendoggo/mathexpressionparser/tokens/Operator.java) enum for more information.
 
 ## Additional information
 
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
-A bunch of examples (tests, which should all be working) can be found in the [tests.txt file](src/test/tests.txt).
+A bunch of examples (tests, which should all be working) can be found in the [tests.txt](src/test/tests.txt) file.
 
 ## TODO
 
 - [x] Implementing multiple operators together with operator priority
 - [x] Implementing function calls
+- [x] Making the solving algorithm more efficient
 - [ ] Implementing variables and constants
 - [ ] Implementing boolean logic, currently these can be implemented with functions
-- [ ] Making the solving algorithm more efficient
