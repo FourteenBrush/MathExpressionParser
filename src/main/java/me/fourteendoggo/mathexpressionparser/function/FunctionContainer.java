@@ -2,6 +2,7 @@ package me.fourteendoggo.mathexpressionparser.function;
 
 import me.fourteendoggo.mathexpressionparser.container.CharTree;
 import me.fourteendoggo.mathexpressionparser.exceptions.FunctionNotFoundException;
+import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.SplittableRandom;
@@ -80,11 +81,19 @@ public class FunctionContainer {
 
             return Math.round(value * factor) / factor;
         }));
-        insertFunction(new FunctionCallSite("rand", 0, 2, ctx -> switch (ctx.size()) {
-            case 0 -> RANDOM.nextDouble();
-            case 1 -> RANDOM.nextDouble(ctx.getDouble(0));
-            default -> RANDOM.nextDouble(ctx.getDouble(0), ctx.getDouble(1)); // 2 args
+        insertFunction(new FunctionCallSite("rand", 0, 2, ctx -> {
+            try {
+                return switch (ctx.size()) {
+                    case 0 -> RANDOM.nextDouble();
+                    case 1 -> RANDOM.nextDouble(ctx.getDouble(0));
+                    default -> RANDOM.nextDouble(ctx.getDouble(0), ctx.getDouble(1));
+                };
+            } catch (IllegalArgumentException e) {
+                // random throws this when f.e. the bound > the origin, translate those into a SyntaxException
+                throw new SyntaxException(e.getMessage());
+            }
         }));
+        // must be handled with care as people can and will abuse this, maybe add a permission or straight up override this function?
         insertFunction(new FunctionCallSite("exit", 0, ctx -> {
             System.out.println("Exiting...");
             System.exit(0);

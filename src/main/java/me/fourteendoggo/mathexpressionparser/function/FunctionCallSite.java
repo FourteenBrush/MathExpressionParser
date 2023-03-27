@@ -31,8 +31,8 @@ public class FunctionCallSite {
         return name;
     }
 
-    public boolean hasArgs() {
-        return minArgs > 0 || maxArgs > 0;
+    public boolean supportsArgs() {
+        return maxArgs > 0;
     }
 
     public FunctionContext allocateParameters() {
@@ -50,7 +50,6 @@ public class FunctionCallSite {
 
     @Override
     public String toString() {
-        return "FunctionCallSite{name='" + name + "', minArgs=" + minArgs +
-                ", maxArgs=" + maxArgs + '}';
+        return "FunctionCallSite{name='" + name + "', minArgs=" + minArgs + ", maxArgs=" + maxArgs + '}';
     }
 }

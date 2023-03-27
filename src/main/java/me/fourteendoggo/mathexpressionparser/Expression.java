@@ -27,37 +27,39 @@ public class Expression {
     }
 
     public double parse() {
-        tokenizer.forEachRemaining(current -> {
-            switch (current) {
-                case ' ', '\t', '\r', '\n' -> tokenizer.next();
-                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current, false);
-                case '^' -> pushToken(Operator.POWER);
-                case '*' -> pushToken(Operator.MULTIPLICATION);
-                case '/' -> pushToken(Operator.DIVISION);
-                case '%' -> pushToken(Operator.MODULO);
-                case '+' -> pushToken(Operator.ADDITION);
-                case '-' -> {
-                    switch (tokens.getLastType()) {
-                        case OPERAND -> pushToken(Operator.SUBTRACTION);
-                        case OPERATOR -> pushOperand(Tokenizer.NULL_CHAR, true);
-                        default -> throw new SyntaxException("invalid position for negative sign");
-                    }
-                }
-                case '(' -> {
-                    // replace things like 2(3+4) with 2*(3+4)
-                    pushMultiplicationIfNeeded();
-                    pushToken(tokenizer.readBrackets());
-                }
-                case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
-                    // replace things like 2cos(3) with 2*cos(3)
-                    pushMultiplicationIfNeeded();
-                    tokens.pushToken(tokenizer.readFunction());
-                }
-                default -> throw new SyntaxException("unexpected character: " + current);
-            }
-        });
+        tokenizer.forEachRemaining(this::parseCharacter);
         return tokens.solve();
+    }
+
+    private void parseCharacter(char current) {
+        switch (current) {
+            case ' ', '\t', '\r', '\n' -> tokenizer.next();
+            case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current, false);
+            case '^' -> pushToken(Operator.POWER);
+            case '*' -> pushToken(Operator.MULTIPLICATION);
+            case '/' -> pushToken(Operator.DIVISION);
+            case '%' -> pushToken(Operator.MODULO);
+            case '+' -> pushToken(Operator.ADDITION);
+            case '-' -> {
+                switch (tokens.getLastType()) {
+                    case OPERAND -> pushToken(Operator.SUBTRACTION);
+                    case OPERATOR -> pushOperand(Tokenizer.NULL_CHAR, true);
+                    default -> throw new SyntaxException("invalid position for a negative sign");
+                }
+            }
+            case '(' -> {
+                // replace things like 2(3+4) with 2*(3+4)
+                pushMultiplicationIfNeeded();
+                pushToken(tokenizer.readBrackets());
+            }
+            case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
+                // replace things like 2cos(3) with 2*cos(3)
+                pushMultiplicationIfNeeded();
+                tokens.pushToken(tokenizer.readFunction());
+            }
+            default -> throw new SyntaxException("unexpected character: " + current);
+        }
     }
 
     private void pushMultiplicationIfNeeded() {

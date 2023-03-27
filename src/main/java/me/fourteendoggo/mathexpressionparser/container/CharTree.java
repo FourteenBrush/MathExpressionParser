@@ -60,8 +60,7 @@ public class CharTree<T> {
         Node crawl = root;
         char current;
         while (pos < buffer.length && inputValidator.test(current = buffer[pos++])) {
-            int index = current - 'a';
-            Node child = crawl.children[index];
+            Node child = crawl.children[current - 'a'];
             Assert.notNull(child, "could not find node for character " + current);
             crawl = child;
         }

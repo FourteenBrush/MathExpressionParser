@@ -70,7 +70,7 @@ public class Tokenizer {
         FunctionContext parameters = function.allocateParameters();
         // only read parameters if the function supports it or if there are optional parameters filled in
         // if current points to anything other than a closing parenthesis, we know we got a parameter
-        if (function.hasArgs()) {
+        if (function.supportsArgs() && pos < input.length && current() != ')') {
             Expression parameter = new Expression(input, Utility::isValidArgument);
             parameter.getTokenizer().pos = pos; // position them to read the first parameter
 

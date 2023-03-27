@@ -28,7 +28,7 @@ public class FunctionContext {
      */
     public void add(double value) {
         if (size == parameters.length) {
-            parameters = Arrays.copyOf(parameters, size * 2);
+            parameters = Arrays.copyOf(parameters, size * 2 + 1);
         }
         parameters[size++] = value;
     }
