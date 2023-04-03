@@ -33,7 +33,7 @@ public class Expression {
 
     private void parseCharacter(char current) {
         switch (current) {
-            case ' ', '\t', '\r', '\n' -> tokenizer.next();
+            case ' ', '\t', '\r', '\n' -> tokenizer.advance();
             case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current, false);
             case '^' -> pushToken(Operator.POWER);
             case '*' -> pushToken(Operator.MULTIPLICATION);
@@ -69,14 +69,14 @@ public class Expression {
     }
 
     private void pushOperand(char firstDigit, boolean negative) {
-        tokenizer.next(); // already read first digit
+        tokenizer.advance(); // already read first digit
         Operand operand = tokenizer.readOperand(firstDigit, negative);
         tokens.pushToken(operand);
     }
 
     private void pushToken(Token token) {
         // order of calls doesn't matter
-        tokenizer.next();
+        tokenizer.advance();
         tokens.pushToken(token);
     }
 }

@@ -32,7 +32,10 @@ class ExpressionParserTest {
     @Test
     void testThrowingExpressions() {
         assertThrows(null);
-        assertThrows(" ");
+        assertThrows("\0");
+        assertThrows("  ");
+        assertThrows("+-1");
+        assertThrows("-+1");
         assertThrows("1 1");
         assertThrows("1 +");
         assertThrows("1 + .");
@@ -69,6 +72,7 @@ class ExpressionParserTest {
         assertThrows("((1+1)");
         assertThrows("(1+1))");
         assertThrows("( )");
+        assertThrows("sin(   )");
         assertThrows("1.sin(1)");
         assertThrows("sin(1");
         assertThrows("sin1");

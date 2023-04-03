@@ -21,7 +21,7 @@ public class FunctionCallSite {
         if (minArgs < 0 || maxArgs < 0 || minArgs > maxArgs) {
             throw new IllegalArgumentException("minArgs must be >= 0, maxArgs must be >= 0 and minArgs must be <= maxArgs");
         }
-        this.name = name.trim().toLowerCase();
+        this.name = name;
         this.minArgs = minArgs;
         this.maxArgs = maxArgs;
         this.function = function;

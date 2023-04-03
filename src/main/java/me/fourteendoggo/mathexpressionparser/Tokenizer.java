@@ -23,7 +23,7 @@ public class Tokenizer {
         this.loopCondition = loopCondition;
     }
 
-    public void next() {
+    public void advance() {
         pos++;
     }
 
@@ -31,22 +31,28 @@ public class Tokenizer {
         return input[pos];
     }
 
+    private char peek() {
+        if (pos >= input.length) return NULL_CHAR;
+        return input[pos];
+    }
+
     public void forEachRemaining(CharConsumer consumer) {
+        // can't use peek() here because the consumer will accept NULL_CHAR
         while (pos < input.length && loopCondition.test(input[pos])) {
             consumer.accept(input[pos]);
         }
     }
 
     public boolean hasAndGet(char expected) {
-        if (pos < input.length && current() == expected) {
-            next();
+        if (peek() == expected) {
+            advance();
             return true;
         }
         return false;
     }
 
     public void expectAndGet(char expected, String exceptionMessage) {
-        Assert.isTrue(pos < input.length && current() == expected, exceptionMessage);
+        Assert.isTrue(peek() == expected, exceptionMessage);
         pos++;
     }
 
@@ -57,7 +63,7 @@ public class Tokenizer {
         subTokenizer.pos = pos + 1; // enter expression, we are sure we read an opening parenthesis
         Operand result = new Operand(sub.parse());
         pos = subTokenizer.pos; // resume reading behind the closing parenthesis
-        Assert.isTrue(pos < input.length && current() == ')', "missing closing parenthesis");
+        Assert.isTrue(peek() == ')', "missing closing parenthesis");
 
         return result;
     }
@@ -70,13 +76,13 @@ public class Tokenizer {
         FunctionContext parameters = function.allocateParameters();
         // only read parameters if the function supports it or if there are optional parameters filled in
         // if current points to anything other than a closing parenthesis, we know we got a parameter
-        if (function.supportsArgs() && pos < input.length && current() != ')') {
+        if (peek() != ')') {
+            if (!function.supportsArgs()) {
+                throw new SyntaxException("did not expect any parameters for function " + function.getName());
+            }
             Expression parameter = new Expression(input, Utility::isValidArgument);
             parameter.getTokenizer().pos = pos; // position them to read the first parameter
-
             readParameterList(parameters, parameter);
-        } else if (pos < input.length && current() != ')') {
-            throw new SyntaxException("did not expect any parameters for function " + function.getName());
         }
         expectAndGet(')', "missing closing parenthesis");
 
@@ -87,7 +93,7 @@ public class Tokenizer {
         parameters.add(parameter.parse());
         Tokenizer tokenizer = parameter.getTokenizer();
 
-        while (tokenizer.pos < tokenizer.input.length && tokenizer.current() == ',') {
+        while (tokenizer.peek() == ',') {
             int oldPos = tokenizer.pos;
 
             parameter = new Expression(input, Utility::isValidArgument);
