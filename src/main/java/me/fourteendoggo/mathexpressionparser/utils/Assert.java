@@ -16,9 +16,9 @@ public interface Assert {
         }
     }
 
-    static void isTrue(boolean condition, String message) {
+    static void isTrue(boolean condition, String message, Object... placeholders) {
         if (!condition) {
-            throw new SyntaxException(message);
+            throw new SyntaxException(message.formatted(placeholders));
         }
     }
 

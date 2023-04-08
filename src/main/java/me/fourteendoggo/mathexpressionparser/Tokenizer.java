@@ -1,6 +1,5 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
@@ -44,16 +43,15 @@ public class Tokenizer {
     }
 
     public boolean hasAndGet(char expected) {
-        if (peek() == expected) {
-            advance();
-            return true;
+        if (peek() != expected) {
+            return false;
         }
-        return false;
+        advance();
+        return true;
     }
 
-    public void expectAndGet(char expected, String exceptionMessage) {
-        Assert.isTrue(peek() == expected, exceptionMessage);
-        pos++;
+    private void expectAndGet(char expected, String exceptionMessage) {
+        Assert.isTrue(hasAndGet(expected), exceptionMessage);
     }
 
     public Operand readBrackets() {
@@ -77,9 +75,7 @@ public class Tokenizer {
         // only read parameters if the function supports it or if there are optional parameters filled in
         // if current points to anything other than a closing parenthesis, we know we got a parameter
         if (peek() != ')') {
-            if (!function.supportsArgs()) {
-                throw new SyntaxException("did not expect any parameters for function " + function.getName());
-            }
+            Assert.isTrue(function.supportsArgs(), "did not expect and parameters for function %s", function.getName());
             Expression parameter = new Expression(input, Utility::isValidArgument);
             parameter.getTokenizer().pos = pos; // position them to read the first parameter
             readParameterList(parameters, parameter);
@@ -196,13 +192,18 @@ public class Tokenizer {
         // support for -func() syntax
         public void alignState() {
             if (!empty) return;
-            Assert.isTrue(pos < input.length && Utility.isLowercaseLetter(input[pos]), "expected a number");
+            Assert.isTrue(Utility.isLowercaseLetter(peek()), "expected a number");
             // if there's a function after the - sign, change our value to -1 to do -1 * func()
             // negative is true, otherwise we wouldn't be here, so actual value is -1
             value = 1;
         }
 
-        // -0 might not work, that's why the tokenizer checks the negative flag
+        /*
+        the tokenizer checks this flag because of the -0.xxx case
+        remember this class is only used for reading a double, and we don't store the decimal part ourselves
+        so the tokenizer might wrongly assume that we store a positive int value because -0 == 0
+        so -0.123 will be read as 0.123 if we didn't keep track of this flag
+         */
         public int getValue() {
             return negative ? -value : value;
         }

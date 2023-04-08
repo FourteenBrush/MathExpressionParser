@@ -10,7 +10,7 @@ import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 
 /**
- * A container to hold functions, global for each expression
+ * A container to hold functions, for all expressions globally
  */
 public class FunctionContainer {
     private static final SplittableRandom RANDOM = new SplittableRandom();
@@ -44,6 +44,13 @@ public class FunctionContainer {
         insertFunction("ceil", Math::ceil);
         insertFunction("abs", d -> d < 0 ? -d : d);
         insertFunction("int", d -> (int) d);
+        insertFunction("and", (a, b) -> a != 0 && b != 0 ? 1 : 0);
+        insertFunction("nand", (a, b) -> a != 0 && b != 0 ? 0 : 1);
+        insertFunction("or", (a, b) -> a != 0 || b != 0 ? 1 : 0);
+        insertFunction("xor", (a, b) -> a != 0 ^ b != 0 ? 1 : 0);
+        insertFunction("not", a -> a == 0 ? 1 : 0);
+        insertFunction("nor", (a, b) -> a != 0 || b != 0 ? 0 : 1);
+        insertFunction("xnor", (a, b) -> a != 0 ^ b != 0 ? 0 : 1);
 
         // constants
         insertFunction(new FunctionCallSite("pi", 0, ctx -> Math.PI));
@@ -99,13 +106,6 @@ public class FunctionContainer {
             System.exit(0);
             throw new AssertionError("cannot return from system exit");
         }));
-        insertFunction("and", (a, b) -> a != 0 && b != 0 ? 1 : 0);
-        insertFunction("nand", (a, b) -> a != 0 && b != 0 ? 0 : 1);
-        insertFunction("or", (a, b) -> a != 0 || b != 0 ? 1 : 0);
-        insertFunction("xor", (a, b) -> a != 0 ^ b != 0 ? 1 : 0);
-        insertFunction("not", a -> a == 0 ? 1 : 0);
-        insertFunction("nor", (a, b) -> a != 0 || b != 0 ? 0 : 1);
-        insertFunction("xnor", (a, b) -> a != 0 ^ b != 0 ? 0 : 1);
     }
 
     public void insertFunction(String functionName, DoubleUnaryOperator function) {

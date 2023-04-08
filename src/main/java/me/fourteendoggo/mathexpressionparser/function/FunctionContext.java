@@ -22,6 +22,13 @@ public class FunctionContext {
     }
 
     /**
+     * @return the number of parameters in this context
+     */
+    public int size() {
+        return size;
+    }
+
+    /**
      * Adds a parameter to this context, resizing the internal array if necessary.
      * This should not be called to modify any parameters after they have been set.
      * @param value the parameter to add
@@ -84,16 +91,9 @@ public class FunctionContext {
      * @return the parameter at the given index
      */
     public double getDouble(int index) {
-        Assert.indexWithinBounds(index, size, "index %s is out of bounds for size %s, function definition is set up wrongly",
+        Assert.indexWithinBounds(index, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
                 index, size, size - 1);
         return parameters[index];
-    }
-
-    /**
-     * @return the number of parameters in this context
-     */
-    public int size() {
-        return size;
     }
 
     @Override

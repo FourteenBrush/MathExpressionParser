@@ -183,7 +183,7 @@ public class TokenList {
             this.left = left;
         }
 
-        // we have a reference to the next calculation so no need for a method that takes in another calculation object
+        // we have a reference to the next calculation so no need to implement Comparable<LinkedCalculation>
         public boolean mayExecuteFirst() {
             return operator.getPriority() >= next.operator.getPriority();
         }

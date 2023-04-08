@@ -53,7 +53,7 @@ public class Expression {
                 pushToken(tokenizer.readBrackets());
             }
             case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
+                 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
                 // replace things like 2cos(3) with 2*cos(3)
                 pushMultiplicationIfNeeded();
                 tokens.pushToken(tokenizer.readFunction());
