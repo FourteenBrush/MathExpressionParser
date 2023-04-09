@@ -1,6 +1,5 @@
-package me.fourteendoggo.mathexpressionparser.benchmarks;
+package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.ExpressionParser;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -8,6 +7,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+// TODO: new benchmarks that represent the current state, also mention them in the readme
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.All)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

@@ -11,8 +11,8 @@ import java.nio.file.Paths;
 public class ExpressionTester {
 
     public static void main(String[] args) throws IOException {
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get("src", "test", "tests.txt"));
-             BufferedWriter writer = Files.newBufferedWriter(Paths.get("src", "test", "results.txt"))) {
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get("core/src/test/resources/tests.txt"));
+             BufferedWriter writer = Files.newBufferedWriter(Paths.get("core/src/test/resources/results.txt"))) {
             String expression;
             int errors = 0;
             while ((expression = reader.readLine()) != null) {

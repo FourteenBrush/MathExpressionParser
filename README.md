@@ -9,7 +9,7 @@ The tokens are then evaluated with order of operations.
 
 ## Usage
 
-To parse an expression, just call the static `parse` method of the [ExpressionParser](src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class:
+To parse an expression, just call the static `parse` method of the [ExpressionParser](core/src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class:
 
 ```java
 double result = ExpressionParser.parse("3(5-1)^2");
@@ -21,9 +21,9 @@ Note that this method throws an unchecked SyntaxException if the syntax of the e
 ### Functions
 
 There is a built-in support for trigonometric and other standard functions.
-Take a look at the [FunctionContainer](src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionContainer.java) class to see them all.
+Take a look at the [FunctionContainer](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionContainer.java) class to see them all.
 
-To add custom functions, call the appropriate `insertFunction` method on the [ExpressionParser](src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class. <br/>
+To add custom functions, call the appropriate `insertFunction` method on the [ExpressionParser](core/src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class. <br/>
 There are predefined methods to inserts functions with either one or two arguments. In other cases, just specify the minimum and maximum number of arguments.
 
 Note that function names must only contain lowercase letters (a-z).
@@ -61,7 +61,7 @@ double result = ExpressionParser.parse("pi()");
 assert result == Math.PI;
 ```
 
-For more complex functions, take a look at the method that accepts a [FunctionCallSite](src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
+For more complex functions, take a look at the method that accepts a [FunctionCallSite](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
 
 Functions are called like regular methods in Java and can also be nested, for example:
 
@@ -88,13 +88,13 @@ assert result == 2;
 |    +     | 2 + 3   | adds 2 and 3 together                |
 |    -     | 2 - 3   | subtracts 2 and 3                    |
 
-Take a look at the [Operator](src/main/java/me/fourteendoggo/mathexpressionparser/tokens/Operator.java) enum for more information.
+Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpressionparser/tokens/Operator.java) enum for more information.
 
 ## Additional information
 
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
-A bunch of examples (tests, which should all be working) can be found in the [tests.txt](src/test/tests.txt) file.
+A bunch of examples (tests, which should all be working) can be found in the [tests.txt](core/src/test/tests.txt) file.
 
 ## TODO
 
