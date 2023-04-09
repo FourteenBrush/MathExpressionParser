@@ -1,5 +1,7 @@
 package me.fourteendoggo.mathexpressionparser;
 
+import me.fourteendoggo.mathexpressionparser.container.TokenList;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -26,7 +28,8 @@ public class ExpressionTester {
                     continue;
                 }
 
-                double expected = new Expression(expectedResult.toCharArray()).parse();
+                TokenList expectedTokens = new Tokenizer(expectedResult.toCharArray()).readTokens();
+                double expected = expectedTokens.solve();
                 if (result != expected) {
                     errors++;
                     writer.write("Expression %s returned %.8f instead of %.8f%n".formatted(expression, result, expected));

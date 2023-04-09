@@ -1,48 +1,59 @@
 package me.fourteendoggo.mathexpressionparser;
 
+import me.fourteendoggo.mathexpressionparser.container.TokenList;
+import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import me.fourteendoggo.mathexpressionparser.tokens.Operand;
+import me.fourteendoggo.mathexpressionparser.tokens.Operator;
+import me.fourteendoggo.mathexpressionparser.tokens.Token;
+import me.fourteendoggo.mathexpressionparser.tokens.TokenType;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
-import me.fourteendoggo.mathexpressionparser.utils.CharConsumer;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.function.IntPredicate;
 
 public class Tokenizer {
-    static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.withDefaultFunctions();
-    static final char NULL_CHAR = '\0';
-    private final char[] input;
-    private final IntPredicate loopCondition;
+    private static final char NULL_CHAR = '\0';
+    private static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.withDefaultFunctions();
+    private final char[] source;
+    private final IntPredicate condition;
+    private final TokenList tokens;
     private int pos;
 
-    public Tokenizer(char[] input, IntPredicate loopCondition) {
-        this.input = input;
-        this.loopCondition = loopCondition;
+    public Tokenizer(char[] source) {
+        this(source, current -> true);
     }
 
-    public void advance() {
+    public Tokenizer(char[] source, IntPredicate condition) {
+        this.source = source;
+        this.condition = condition;
+        this.tokens = new TokenList();
+    }
+
+    static FunctionContainer getFunctionContainer() {
+        return FUNCTION_CONTAINER;
+    }
+
+    private char current() {
+        return source[pos];
+    }
+
+    private void advance() {
         pos++;
     }
 
-    public char current() {
-        return input[pos];
-    }
-
     private char peek() {
-        if (pos >= input.length) return NULL_CHAR;
-        return input[pos];
+        if (pos >= source.length) return NULL_CHAR;
+        return source[pos];
     }
 
-    public void forEachRemaining(CharConsumer consumer) {
-        // can't use peek() here because the consumer will accept NULL_CHAR
-        while (pos < input.length && loopCondition.test(input[pos])) {
-            consumer.accept(input[pos]);
-        }
+    private void position(int pos) {
+        this.pos = pos;
     }
 
-    public boolean hasAndGet(char expected) {
+    private boolean hasAndGet(char expected) {
         if (peek() != expected) {
             return false;
         }
@@ -54,56 +65,99 @@ public class Tokenizer {
         Assert.isTrue(hasAndGet(expected), exceptionMessage);
     }
 
-    public Operand readBrackets() {
-        Expression sub = new Expression(input, Utility::isBetweenBrackets);
-        Tokenizer subTokenizer = sub.getTokenizer();
+    private Tokenizer branchOff(IntPredicate newCondition, int newPos) {
+        Tokenizer res = new Tokenizer(source, newCondition);
+        res.position(newPos);
+        return res;
+    }
 
-        subTokenizer.pos = pos + 1; // enter expression, we are sure we read an opening parenthesis
-        Operand result = new Operand(sub.parse());
-        pos = subTokenizer.pos; // resume reading behind the closing parenthesis
+    public TokenList readTokens() {
+        while (pos < source.length && condition.test(source[pos])) {
+            char current = source[pos];
+            switch (current) {
+                case ' ', '\r', '\t' -> advance();
+                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current, false);
+                case '^' -> pushToken(Operator.POWER);
+                case '*' -> pushToken(Operator.MULTIPLICATION);
+                case '/' -> pushToken(Operator.DIVISION);
+                case '%' -> pushToken(Operator.MODULO);
+                case '+' -> pushToken(Operator.ADDITION);
+                case '-' -> {
+                    switch (tokens.getLastType()) {
+                        case OPERAND -> pushToken(Operator.SUBTRACTION);
+                        case OPERATOR -> pushOperand(NULL_CHAR, true);
+                        default -> throw new SyntaxException("invalid position for a negative sign");
+                    }
+                }
+                case '(' -> {
+                    // replace things like 2(3+4) with 2*(3+4)
+                    pushMultiplicationIfNeeded();
+                    pushToken(readBrackets());
+                }
+                case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
+                    // replace things like 2cos(3) with 2*cos(3)
+                    pushMultiplicationIfNeeded();
+                    tokens.pushToken(readFunctionCall());
+                }
+                default -> throw new SyntaxException("unexpected character: " + current);
+            }
+        }
+        return tokens;
+    }
+
+    private void pushOperand(char firstDigit, boolean negative) {
+        advance(); // we already read the first digit
+        tokens.pushToken(readOperand(firstDigit, negative));
+    }
+
+    private void pushToken(Token token) {
+        advance(); // assuming token is only one char
+        tokens.pushToken(token);
+    }
+
+    private void pushMultiplicationIfNeeded() {
+        if (tokens.getLastType() == TokenType.OPERAND) {
+            tokens.pushToken(Operator.MULTIPLICATION);
+        }
+    }
+
+    private Operand readBrackets() {
+        Tokenizer tokenizer = branchOff(Utility::isBetweenBrackets, pos + 1); // enter expression
+        Operand result = new Operand(tokenizer.readTokens().solve());
+        pos = tokenizer.pos;
         Assert.isTrue(peek() == ')', "missing closing parenthesis");
-
         return result;
     }
 
-    public Operand readFunction() {
-        FunctionCallSite function = FUNCTION_CONTAINER.getFunction(input, pos);
+    private Operand readFunctionCall() {
+        FunctionCallSite function = FUNCTION_CONTAINER.getFunction(source, pos);
         pos += function.getName().length(); // skip function name
-        expectAndGet('(', "missing opening parenthesis");
+        expectAndGet('(', "missing opening parenthesis for function call");
 
         FunctionContext parameters = function.allocateParameters();
         // only read parameters if the function supports it or if there are optional parameters filled in
         // if current points to anything other than a closing parenthesis, we know we got a parameter
         if (peek() != ')') {
-            Assert.isTrue(function.supportsArgs(), "did not expect and parameters for function %s", function.getName());
-            Expression parameter = new Expression(input, Utility::isValidArgument);
-            parameter.getTokenizer().pos = pos; // position them to read the first parameter
-            readParameterList(parameters, parameter);
+            Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", function.getName());
+            Tokenizer paramTokenizer = new Tokenizer(source, Utility::isValidArgument);
+            paramTokenizer.position(pos); // position them to read the first parameter
+
+            parameters.add(paramTokenizer.readTokens().solve());
+            while (paramTokenizer.peek() == ',') { // extra param coming
+                int oldPos = paramTokenizer.pos;
+                paramTokenizer = paramTokenizer.branchOff(Utility::isValidArgument, oldPos + 1);
+                parameters.add(paramTokenizer.readTokens().solve());
+            }
+            pos = paramTokenizer.pos;
         }
         expectAndGet(')', "missing closing parenthesis");
 
         return new Operand(function.apply(parameters));
     }
 
-    private void readParameterList(FunctionContext parameters, Expression parameter) {
-        parameters.add(parameter.parse());
-        Tokenizer tokenizer = parameter.getTokenizer();
-
-        while (tokenizer.peek() == ',') {
-            int oldPos = tokenizer.pos;
-
-            parameter = new Expression(input, Utility::isValidArgument);
-            tokenizer = parameter.getTokenizer();
-
-            tokenizer.pos = oldPos + 1;
-            parameters.add(parameter.parse());
-        }
-        pos = tokenizer.pos;
-    }
-
-    public Operand readOperand(char firstDigit, boolean negative) {
-        double value = readDouble(firstDigit, negative);
-        return new Operand(value);
+    private Operand readOperand(char firstDigit, boolean negative) {
+        return new Operand(readDouble(firstDigit, negative));
     }
 
     private double readDouble(char firstDigit, boolean negative) {
@@ -112,7 +166,6 @@ public class Tokenizer {
             beforeComma.alignState();
             return beforeComma.getValue();
         }
-
         double decimalPart = readDecimalPart();
         beforeComma.alignState();
 
@@ -128,7 +181,7 @@ public class Tokenizer {
             res.push(firstDigit);
         }
 
-        loop: while (pos < input.length) {
+        loop: while (pos < source.length) {
             char current = current();
             switch (current) {
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> res.push(current);
@@ -148,7 +201,7 @@ public class Tokenizer {
         double result = 0;
         long divider = 10;
 
-        loop: while (pos < input.length) {
+        loop: while (pos < source.length) {
             char current = current();
             switch (current) {
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
@@ -162,11 +215,6 @@ public class Tokenizer {
         }
         Assert.isTrue(pos > oldPos, "could not read the decimal part of a number");
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return new String(input, pos, input.length - pos);
     }
 
     private class IntResult {

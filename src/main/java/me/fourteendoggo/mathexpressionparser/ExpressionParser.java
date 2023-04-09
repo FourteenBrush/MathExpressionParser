@@ -1,5 +1,6 @@
 package me.fourteendoggo.mathexpressionparser;
 
+import me.fourteendoggo.mathexpressionparser.container.TokenList;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
@@ -22,23 +23,24 @@ public class ExpressionParser {
      */
     public static double parse(String input) {
         Assert.notNull(input, "input was null");
-        Assert.isFalse(input.isEmpty(), "empty input");
+        Assert.isFalse(input.isEmpty(), "input was empty");
 
-        return new Expression(input.toCharArray()).parse();
+        TokenList tokens = new Tokenizer(input.toCharArray()).readTokens();
+        return tokens.solve();
     }
 
     /**
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, DoubleUnaryOperator function) {
-        Tokenizer.FUNCTION_CONTAINER.insertFunction(functionName, function);
+        Tokenizer.getFunctionContainer().insertFunction(functionName, function);
     }
 
     /**
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, DoubleBinaryOperator function) {
-        Tokenizer.FUNCTION_CONTAINER.insertFunction(functionName, function);
+        Tokenizer.getFunctionContainer().insertFunction(functionName, function);
     }
 
     /**
@@ -49,7 +51,7 @@ public class ExpressionParser {
      * @param function the function to call
      */
     public static void insertFunction(String functionName, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> function) {
-        Tokenizer.FUNCTION_CONTAINER.insertFunction(new FunctionCallSite(functionName, minArgs, maxArgs, function));
+        Tokenizer.getFunctionContainer().insertFunction(new FunctionCallSite(functionName, minArgs, maxArgs, function));
     }
 
     /**
@@ -57,6 +59,6 @@ public class ExpressionParser {
      * @param function the function to insert
      */
     public static void insertFunction(FunctionCallSite function) {
-        Tokenizer.FUNCTION_CONTAINER.insertFunction(function);
+        Tokenizer.getFunctionContainer().insertFunction(function);
     }
 }
