@@ -11,7 +11,7 @@
         <module>core</module>
         <module>cli</module>
         <module>benchmarks</module>
-        <module>dist</module>
+        <module>distribution</module>
     </modules>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
