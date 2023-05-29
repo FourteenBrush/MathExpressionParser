@@ -1,11 +1,46 @@
 # MathExpressionParser
 
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/FourteenBrush/MathExpressionParser)
 
 A lightweight Java library for parsing and evaluating mathematical expressions.
 
 This algorithm works with a linked list of tokens that is created from the input string.
 The tokens are then evaluated with order of operations.
+
+## Dependency
+
+There is both a Maven and Gradle dependency, which work with JitPack. In order to use them, replace `Tag` with the appropriate version you can find on the
+[releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this page (latest is `v1.0.1`).
+
+### Maven:
+
+```
+<repository>
+	<id>jitpack.io</id>
+	<url>https://jitpack.io</url>
+</repository>
+```
+```
+<dependency>
+	<groupId>com.github.FourteenBrush</groupId>
+	<artifactId>MathExpressionParser</artifactId>
+	<version>Tag</version>
+</dependency>
+```
+
+### Gradle
+
+```
+repositories {
+	maven { url 'https://jitpack.io' }
+}
+```
+```
+dependencies {
+	implementation 'com.github.FourteenBrush:MathExpressionParser:Tag'
+}
+```
 
 ## Usage
 
@@ -94,7 +129,7 @@ Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpression
 
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
-A bunch of examples (tests, which should all be working) can be found in the [tests.txt](core/src/test/tests.txt) file.
+A bunch of examples (tests, which should all be working) can be found in the [tests.txt](core/src/test/resources/tests.txt) file.
 
 ## TODO
 
