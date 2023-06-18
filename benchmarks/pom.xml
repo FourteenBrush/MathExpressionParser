@@ -9,16 +9,11 @@
         <version>1.0.1</version>
     </parent>
     <artifactId>benchmarks</artifactId>
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>me.fourteendoggo</groupId>
             <artifactId>core</artifactId>
-            <version>1.0.0</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
