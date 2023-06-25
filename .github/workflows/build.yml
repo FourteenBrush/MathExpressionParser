@@ -29,5 +29,5 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: 'Trigger Jitpack build'
+    - name: Trigger Jitpack build
       run: curl "https://jitpack.io/com/github/FourteenBrush/MathExpressionParser/${GITHUB_SHA:0:10}/build.log"
