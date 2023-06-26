@@ -1,31 +1,32 @@
 # MathExpressionParser
 
-[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/FourteenBrush/MathExpressionParser)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/FourteenBrush/MathExpressionParser/build.yml)
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?label=license)](http://perso.crans.org/besson/LICENSE.html)
+[![GitHub release](https://img.shields.io/github/v/release/FourteenBrush/MathExpressionParser)](https://github.com/FourteenBrush/MathExpressionParser/releases)
 
 A lightweight Java library for parsing and evaluating mathematical expressions.
 
-This algorithm works with a linked list of tokens that is created from the input string.
-The tokens are then evaluated with order of operations.
+This algorithm works with a linked list of calculations that is created from the input string.
+The calculations are then evaluated with order of operations.
 
 ## Dependency
 
-There is both a Maven and Gradle dependency, which work with JitPack. In order to use them, replace `Tag` with the appropriate version you can find on the
-[releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this page (latest is `v1.0.1`).
+There is both a Maven and Gradle dependency, which work with JitPack. In order to use them, replace `Tag` with the appropriate version which you can find on the
+[releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this file.
 
 ### Maven:
 
 ```
 <repository>
-	<id>jitpack.io</id>
-	<url>https://jitpack.io</url>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
 </repository>
 ```
 ```
 <dependency>
-	<groupId>com.github.FourteenBrush</groupId>
-	<artifactId>MathExpressionParser</artifactId>
-	<version>Tag</version>
+    <groupId>com.github.FourteenBrush</groupId>
+    <artifactId>MathExpressionParser</artifactId>
+    <version>Tag</version>
 </dependency>
 ```
 
@@ -33,12 +34,12 @@ There is both a Maven and Gradle dependency, which work with JitPack. In order t
 
 ```
 repositories {
-	maven { url 'https://jitpack.io' }
+    maven { url 'https://jitpack.io' }
 }
 ```
 ```
 dependencies {
-	implementation 'com.github.FourteenBrush:MathExpressionParser:Tag'
+    implementation 'com.github.FourteenBrush:MathExpressionParser:Tag'
 }
 ```
 
@@ -47,94 +48,146 @@ dependencies {
 To parse an expression, just call the static `parse` method of the [ExpressionParser](core/src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class:
 
 ```java
-double result = ExpressionParser.parse("3(5-1)^2");
-assert result == 48;
+double result = ExpressionParser.parse("3(5-1)");
+assert result == 12;
 ```
 
 Note that this method throws an unchecked SyntaxException if the syntax of the expression is invalid.
 
-### Functions
+### Functions and variables
 
-There is a built-in support for trigonometric and other standard functions.
-Take a look at the [FunctionContainer](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionContainer.java) class to see them all.
+There is builtin support for trigonometric and other standard functions, click
+[here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to seem them all.
 
-To add custom functions, call the appropriate `insertFunction` method on the [ExpressionParser](core/src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class. <br/>
-There are predefined methods to inserts functions with either one or two arguments. In other cases, just specify the minimum and maximum number of arguments.
-
-Note that function names must only contain lowercase letters (a-z).
-
-#### Examples:
+Functions are called like normal java method, they can have zero or more arguments and can be nested:
 
 ```java
-// this inserts a function called "twice" that doubles the input
-ExpressionParser.insertFunction("twice", arg -> arg * 2);
-double result = ExpressionParser.parse("twice(10)");
-assert result == 20;
+double result = ExpressionParser.parse("sin(rad(90))");
+assert result == 1; // sine of 90° is 1
 ```
 
-Functions cannot be overloaded, but you can define one function that takes a variable number of arguments.
+```java
+double result = ExpressionParser.parse("min(5, 10, 3)");
+assert result == 3;
+```
+
+Variables are just called by their name like you would expect them.
 
 ```java
-// insert a function called "add" that adds all the arguments together
-// the function has a minimum of 2 and a maximum of 10 arguments
-// note the get() method that returns the parameter at the specified index
+double pi = ExpressionParser.parse("pi");
+assert pi == Math.PI;
+```
+
+Currently the variables `pi`, `e`, `true` (1) and `false` (0) are builtin.
+
+#### Inserting custom functions and variables.
+
+To insert custom functions or variables, you need to call the appropriate `insertFunction` method on the `ExpressionParser` class.
+This inserts into the global symbol lookup, examples:
+
+```java
+/* This inserts a function called twice that doubles its input */
+ExpressionParser.insertFunction("twice", number -> number * 2);
+double result = ExpressionParser.parse("twice(2)");
+assert result == 4;
+```
+
+Functions cannot be overloaded, but you can define a function which accepts a variable amount of arguments.  
+PS: don't actually do this, there is already a builtin sum function:
+```java
+/* 
+ * This inserts a function called 'add' that returns the sum of all of its arguments.
+ * It accepts a minimum of 2 and a maximum of 10 arguments.
+ */
 ExpressionParser.insertFunction("add", 2, 10, ctx -> {
-    double sum = 0;
-    for (int i = 0; i < ctx.size(); i++) {
-        sum += ctx.get(i);
-    }
-    return sum;
+    double sum = ctx.getDouble(0);
+    for (int i = 1; i < ctx.size(); i++) {
+        sum += ctx.getDouble(i); // gets the argument at that index
+    }   
 });
-```
 
-It's also possible to define a function that returns a constant value. This might be replaced in the future with actual constants like `$PI`.
-
-```java
-// insert a function called "pi" that returns the value of pi
-ExpressionParser.insertFunction("pi", 0, 0, ctx -> Math.PI);
-double result = ExpressionParser.parse("pi()");
-assert result == Math.PI;
+double result = ExpressionParser.parse("add(1, 2, 4)");
+assert result == 7;
 ```
 
 For more complex functions, take a look at the method that accepts a [FunctionCallSite](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
 
-Functions are called like regular methods in Java and can also be nested, for example:
+Inserting variables is very similar:
 
 ```java
-double result = ExpressionParser.parse("sin(rad(max(60, 60 + 30)))");
-// sin of 90 degrees is 1
-assert result == 1;
+ExpressionParser.insertVariable(new Variable("magic", 1.234));
+double magic = ExpressionParser.parse("magic");
+assert magic == 1.234;
 ```
 
+#### Using a custom execution environment (recommended):
+
+As mentioned above, inserting functions or variables will place them in the global symbol lookup.
+If you want more flexibility over what symbols can be used in what context, you can explicitly provide a
+`ExecutionEnv`:.
+
 ```java
-// 2min(1, 2) is the same as 2 * min(1, 2)
-double result = ExpressionParser.parse("2min(1, 2, 3, 4, 5)");
-assert result == 2;
+ExecutionEnv env = new ExecutionEnv();
+// 'today' function is only bound to this environment
+env.insertFunction("today", () -> {
+    DayOfWeek day = LocalDate.now();
+    return day.getValue();
+});
+
+// still have to provide the environment where that function will be searched for
+double dayOfWeek = ExpressionParser.parse("today()", env); 
+assert dayOfWeek >= 1 && dayOfWeek <= 7;
+
+// ERROR: global environment does not have this function, we did not specify our own one so the global one is used
+double error = ExpressionParser.parse("today()");
 ```
+
+`Note:` function and variable names must only contain lowercase letters (a-z), this is subject to change.
 
 ### Operators
 
-| Operator | Example | Explanation                          |
-|:--------:|---------|--------------------------------------|
-|    ^     | 2 ^ 3   | 2 to the power of 3                  |
-|    *     | 2 * 3   | 2 multiplied by 3                    |
-|    /     | 2 / 3   | 2 divided by 3                       |
-|    %     | 2 % 3   | remainder of 2 divided by 3 (modulo) |
-|    +     | 2 + 3   | adds 2 and 3 together                |
-|    -     | 2 - 3   | subtracts 2 and 3                    |
+For all logical operators, a 0 means false, whereas everything else is true. To make it more clear, you can use
+the builtin `true` and `false` variables.
 
-Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpressionparser/tokens/Operator.java) enum for more information.
+| Operator | Example  | Explanation                                                |
+|:--------:|----------|------------------------------------------------------------|
+|    !     | !(1 < 2) | logical not, unary                                         |
+|    ~     | ~2       | bitwise not, unary                                         |
+|    *     | 2 * 3    | multiplies 2 by 3                                          |
+|    /     | 2 / 3    | divides 2 by 3 (floating point division)                   |
+|    %     | 8 % 3    | remainder of 8 divided by 3 (modulo)                       |
+|    +     | 2 + 3    | adds 2 and 3 together                                      |
+|    -     | 2 - 3    | subtracts 2 and 3                                          |
+|    <<    | 4 << 2   | shifts 4 2 bits to the left                                |
+|    >>    | 32 >> 2  | shifts 32 2 bits to the right                              |
+|    <     | 3 < 1    | returns 1 if 3 is smaller than 1, 0 otherwise              |
+|    >     | 4 > 2    | returns 1 if 4 is bigger than 2, 0 otherwise               |
+|    <=    | 12 <= 3  | returns 1 if 12 is smaller then or equal to 3, 0 otherwise |
+|    >=    | 10 >= 9  | returns 1 if 10 is bigger than or equal to 9, 0 otherwise  |
+|    ==    | 10 == 9  | returns 1 if 10 equals 9, 0 otherwise                      |
+|    !=    | 10 != 9  | returns 1 if 10 does not equal 9, 0 otherwise              |
+|    &     | 10 & 9   | bitwise and, requires integers as operands                 |
+|    ^     | 10 ^ 9   | bitwise xor, requires integers as operands                 |
+|    \|    | 10 \| 9  | bitwise or, requires integers as operands                  |
+|    &&    | 10 && 9  | boolean and                                                |
+|   \|\|   | 2 \|\| 1 | boolean or                                                 |
+
+Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpressionparser/token/Operator.java) enum for more information.
 
 ## Additional information
 
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
-A bunch of examples (tests, which should all be working) can be found in the [tests.txt](core/src/test/resources/tests.txt) file.
+A bunch of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file, ignore the double quotes.
 
 ## TODO
 
 - [x] Implementing multiple operators together with operator priority
 - [x] Implementing function calls
 - [x] Making the solving algorithm more efficient
+- [x] Implementing boolean logic, currently these can be implemented with functions
 - [ ] Implementing variables and constants
-- [ ] Implementing boolean logic, currently these can be implemented with functions
+- [ ] Make it possible to insert variables and functions on a non-global base
+
+## More examples
+

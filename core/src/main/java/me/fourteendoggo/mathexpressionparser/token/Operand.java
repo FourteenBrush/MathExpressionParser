@@ -1,4 +1,4 @@
-package me.fourteendoggo.mathexpressionparser.tokens;
+package me.fourteendoggo.mathexpressionparser.token;
 
 public class Operand implements Token {
     private double value;

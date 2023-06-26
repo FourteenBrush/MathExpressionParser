@@ -1,10 +1,6 @@
-package me.fourteendoggo.mathexpressionparser.container;
+package me.fourteendoggo.mathexpressionparser.token;
 
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
-import me.fourteendoggo.mathexpressionparser.tokens.Operand;
-import me.fourteendoggo.mathexpressionparser.tokens.Operator;
-import me.fourteendoggo.mathexpressionparser.tokens.Token;
-import me.fourteendoggo.mathexpressionparser.tokens.TokenType;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 public class TokenList {

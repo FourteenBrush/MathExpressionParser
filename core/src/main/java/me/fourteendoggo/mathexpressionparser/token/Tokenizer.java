@@ -1,37 +1,32 @@
-package me.fourteendoggo.mathexpressionparser;
+package me.fourteendoggo.mathexpressionparser.token;
 
-import me.fourteendoggo.mathexpressionparser.container.TokenList;
+import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
-import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
-import me.fourteendoggo.mathexpressionparser.tokens.Operand;
-import me.fourteendoggo.mathexpressionparser.tokens.Operator;
-import me.fourteendoggo.mathexpressionparser.tokens.TokenType;
+import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
+import me.fourteendoggo.mathexpressionparser.symbol.Variable;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.function.IntPredicate;
 
 public class Tokenizer {
-    private static final FunctionContainer functionContainer = FunctionContainer.withDefaultFunctions();
     private final char[] source;
+    private final ExecutionEnv env;
     private final TokenList tokens;
     private final IntPredicate loopCondition;
     private int pos;
 
-    public Tokenizer(char[] source) {
-        this(source, current -> true);
+    public Tokenizer(char[] source, ExecutionEnv env) {
+        this(source, env, current -> true);
     }
 
-    public Tokenizer(char[] source, IntPredicate loopCondition) {
+    public Tokenizer(char[] source, ExecutionEnv env, IntPredicate loopCondition) {
         this.source = source;
+        this.env = env;
         this.loopCondition = loopCondition;
         this.tokens = new TokenList();
-    }
-
-    public static FunctionContainer getFunctionContainer() {
-        return functionContainer;
     }
 
     public TokenList readTokens() {
@@ -81,7 +76,8 @@ public class Tokenizer {
                     if (tokens.getLastType() == TokenType.OPERAND) {
                         tokens.pushToken(Operator.MULTIPLICATION);
                     }
-                    tokens.pushToken(readFunctionCall());
+                    tokens.pushToken(readSymbol());
+                    // tokens.pushToken(readFunctionCall0());
                 }
                 case '&' -> {
                     if (match('&')) { // already standing on the second '&' then
@@ -124,7 +120,6 @@ public class Tokenizer {
                 default -> throw new SyntaxException("unexpected character " + current);
             }
         }
-        System.out.println(tokens);
         return tokens;
     }
 
@@ -166,7 +161,7 @@ public class Tokenizer {
     }
 
     private Tokenizer branchOff(IntPredicate newLoopCondition, int newPos) {
-        Tokenizer tokenizer = new Tokenizer(source, newLoopCondition);
+        Tokenizer tokenizer = new Tokenizer(source, env, newLoopCondition);
         tokenizer.pos = newPos;
         return tokenizer;
     }
@@ -177,12 +172,8 @@ public class Tokenizer {
     }
     
     private void pushOperand(char initialChar) {
-        double value = readDouble(initialChar);
+        double value = readDouble(initialChar, true);
         tokens.pushToken(new Operand(value));
-    }
-
-    private double readDouble(char initialChar) {
-        return readDouble(initialChar, true);
     }
 
     /**
@@ -254,14 +245,24 @@ public class Tokenizer {
         return result;
     }
 
-    private Operand readFunctionCall() {
-        FunctionCallSite function = functionContainer.getFunction(source, pos - 1); // already incremented pos
-        pos += function.getName().length() - 1;
+    private Operand readSymbol() {
+        Symbol symbol = env.lookupSymbol(source, pos - 1); // already incremented pos
+        pos += symbol.getName().length() - 1;
+
+        // TODO: change this to java 19 switch, want to keep the project on java 17 for now
+        return switch (symbol.getType()) {
+            case FUNCTION -> readFunctionCall((FunctionCallSite) symbol);
+            case VARIABLE -> new Operand(((Variable) symbol).value());
+        };
+    }
+
+    private Operand readFunctionCall(FunctionCallSite function) {
         matchOrThrow('(', "missing opening parenthesis for function call");
 
         FunctionContext parameters = function.allocateParameters();
         char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call " + function.getName());
         if (maybeClosingParenthesis != ')') { // arguments were provided
+            // TODO: when calling f.e. exit( ), the space gets interpreted as parameters too
             Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", function.getName());
 
             // do while doesn't really work here due to that + 1

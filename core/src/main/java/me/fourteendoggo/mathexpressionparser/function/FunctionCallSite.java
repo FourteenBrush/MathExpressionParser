@@ -20,6 +20,9 @@ public class FunctionCallSite implements Symbol {
     }
 
     public FunctionCallSite(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> function) {
+        if (name.isBlank()) {
+            throw new IllegalArgumentException("name must not be blank");
+        }
         if (minArgs < 0 || maxArgs < 0 || minArgs > maxArgs) {
             throw new IllegalArgumentException("minArgs must be >= 0, maxArgs must be >= 0 and minArgs must be <= maxArgs");
         }
@@ -34,6 +37,7 @@ public class FunctionCallSite implements Symbol {
         return SymbolType.FUNCTION;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -42,7 +46,7 @@ public class FunctionCallSite implements Symbol {
         return maxArgs > 0;
     }
 
-    public FunctionContext allocateParameters() {
+    public FunctionContext allocateParameters() { // TODO: think of a better way to do this, avoid branches
         // I'd rather not allocate a double array of Integer.MAX_VALUE size
         return new FunctionContext(Math.min(maxArgs, 20));
     }
