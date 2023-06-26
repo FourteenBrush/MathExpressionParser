@@ -7,7 +7,6 @@ import me.fourteendoggo.mathexpressionparser.function.FunctionContainer;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import me.fourteendoggo.mathexpressionparser.tokens.Operand;
 import me.fourteendoggo.mathexpressionparser.tokens.Operator;
-import me.fourteendoggo.mathexpressionparser.tokens.Token;
 import me.fourteendoggo.mathexpressionparser.tokens.TokenType;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
@@ -15,245 +14,268 @@ import me.fourteendoggo.mathexpressionparser.utils.Utility;
 import java.util.function.IntPredicate;
 
 public class Tokenizer {
-    private static final char NULL_CHAR = '\0';
-    private static final FunctionContainer FUNCTION_CONTAINER = FunctionContainer.withDefaultFunctions();
+    private static final FunctionContainer functionContainer = FunctionContainer.withDefaultFunctions();
     private final char[] source;
-    private final IntPredicate condition;
     private final TokenList tokens;
+    private final IntPredicate loopCondition;
     private int pos;
 
     public Tokenizer(char[] source) {
         this(source, current -> true);
     }
 
-    public Tokenizer(char[] source, IntPredicate condition) {
+    public Tokenizer(char[] source, IntPredicate loopCondition) {
         this.source = source;
-        this.condition = condition;
+        this.loopCondition = loopCondition;
         this.tokens = new TokenList();
     }
 
-    static FunctionContainer getFunctionContainer() {
-        return FUNCTION_CONTAINER;
-    }
-
-    private char current() {
-        return source[pos];
-    }
-
-    private void advance() {
-        pos++;
-    }
-
-    private char peek() {
-        if (pos >= source.length) return NULL_CHAR;
-        return source[pos];
-    }
-
-    private void position(int pos) {
-        this.pos = pos;
-    }
-
-    private boolean hasAndGet(char expected) {
-        if (peek() != expected) {
-            return false;
-        }
-        advance();
-        return true;
-    }
-
-    private void expectAndGet(char expected, String exceptionMessage) {
-        Assert.isTrue(hasAndGet(expected), exceptionMessage);
-    }
-
-    private Tokenizer branchOff(IntPredicate newCondition, int newPos) {
-        Tokenizer res = new Tokenizer(source, newCondition);
-        res.position(newPos);
-        return res;
+    public static FunctionContainer getFunctionContainer() {
+        return functionContainer;
     }
 
     public TokenList readTokens() {
-        while (pos < source.length && condition.test(source[pos])) {
-            char current = source[pos];
+        while (hasRemaining()) {
+            char current = advance();
             switch (current) {
-                case ' ', '\r', '\t' -> advance();
-                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current, false);
-                case '^' -> pushToken(Operator.POWER);
-                case '*' -> pushToken(Operator.MULTIPLICATION);
-                case '/' -> pushToken(Operator.DIVISION);
-                case '%' -> pushToken(Operator.MODULO);
-                case '+' -> pushToken(Operator.ADDITION);
+                case ' ', '\r', '\t' -> {} // no-op
+                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current);
+                case '*' -> tokens.pushToken(Operator.MULTIPLICATION);
+                case '/' -> tokens.pushToken(Operator.DIVISION);
+                case '+' -> tokens.pushToken(Operator.ADDITION);
+                case '%' -> tokens.pushToken(Operator.MODULO);
+                case '^' -> tokens.pushToken(Operator.BITWISE_XOR);
                 case '-' -> {
                     switch (tokens.getLastType()) {
-                        case OPERAND -> pushToken(Operator.SUBTRACTION);
-                        case OPERATOR -> pushOperand(NULL_CHAR, true);
-                        default -> throw new SyntaxException("invalid position for a negative sign");
+                        case OPERAND -> tokens.pushToken(Operator.SUBTRACTION);
+                        case OPERATOR -> pushNegativeOperand();
                     }
                 }
-                case '(' -> {
-                    // replace things like 2(3+4) with 2*(3+4)
-                    pushMultiplicationIfNeeded();
-                    pushToken(readBrackets());
+                case '<' -> {
+                    switch (advanceOrThrow()) {
+                        case '<' -> tokens.pushToken(Operator.LEFT_SHIFT);
+                        case '=' -> tokens.pushToken(Operator.LESS_THEN_OR_EQUAL);
+                        default -> {
+                            tokens.pushToken(Operator.LESS_THEN);
+                            pos--; // put the character after < back
+                        }
+                    }
+                }
+                case '>' -> {
+                    switch (advanceOrThrow()) {
+                        case '>' -> tokens.pushToken(Operator.RIGHT_SHIFT);
+                        case '=' -> tokens.pushToken(Operator.GREATER_THEN_OR_EQUAL);
+                        default -> {
+                            tokens.pushToken(Operator.GREATER_THEN);
+                            pos--; // put the character after > back
+                        }
+                    }
+                }
+                case '=' -> {
+                    matchOrThrow('=', "expected another '=' for comparison");
+                    tokens.pushToken(Operator.EQUALS);
                 }
                 case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
                      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
-                    // replace things like 2cos(3) with 2*cos(3)
-                    pushMultiplicationIfNeeded();
+                    // support for things like 2cos(1) -> 2 * cos(1)
+                    if (tokens.getLastType() == TokenType.OPERAND) {
+                        tokens.pushToken(Operator.MULTIPLICATION);
+                    }
                     tokens.pushToken(readFunctionCall());
                 }
-                default -> throw new SyntaxException("unexpected character: " + current);
+                case '&' -> {
+                    if (match('&')) { // already standing on the second '&' then
+                        tokens.pushToken(Operator.LOGICAL_AND);
+                    } else {
+                        tokens.pushToken(Operator.BITWISE_AND);
+                    }
+                }
+                case '|' -> {
+                    if (match('|')) {
+                        tokens.pushToken(Operator.LOGICAL_OR);
+                    } else {
+                        tokens.pushToken(Operator.BITWISE_OR);
+                    }
+                }
+                case '(' -> {
+                    // support for things like 2(1 + 1) -> 2 * (1 + 1)
+                    if (tokens.getLastType() == TokenType.OPERAND) {
+                        tokens.pushToken(Operator.MULTIPLICATION);
+                    }
+                    tokens.pushToken(readBrackets());
+                }
+                case '!' -> {
+                    if (currentOrThrow("expected an operand") == '=') {
+                        advance();
+                        tokens.pushToken(Operator.NOT_EQUALS);
+                    } else { // one of the highest priority operators, can be solved immediately
+                        Tokenizer tokenizer = branchOff(loopCondition, pos);
+                        double toBeNegated = tokenizer.readTokens().solve();
+                        pos = tokenizer.pos;
+                        tokens.pushToken(new Operand(Utility.boolNot(toBeNegated)));
+                    }
+                }
+                case '~' -> { // one of the highest priority operators, can be solved immediately
+                    Tokenizer tokenizer = branchOff(loopCondition, pos);
+                    int input = Utility.requireInt(tokenizer.readTokens().solve());
+                    pos = tokenizer.pos;
+                    tokens.pushToken(new Operand(~input));
+                }
+                default -> throw new SyntaxException("unexpected character " + current);
             }
         }
+        System.out.println(tokens);
         return tokens;
     }
 
-    private void pushOperand(char firstDigit, boolean negative) {
-        advance(); // we already read the first digit
-        tokens.pushToken(readOperand(firstDigit, negative));
+    private boolean hasRemaining() {
+        return pos < source.length && loopCondition.test(source[pos]);
     }
 
-    private void pushToken(Token token) {
-        advance(); // assuming token is only one char
-        tokens.pushToken(token);
+    private char advance() {
+        return source[pos++];
     }
 
-    private void pushMultiplicationIfNeeded() {
-        if (tokens.getLastType() == TokenType.OPERAND) {
-            tokens.pushToken(Operator.MULTIPLICATION);
+    private char advanceOrThrow() {
+        Assert.isTrue(hasRemaining(), "expected an operand");
+        return advance();
+    }
+
+    private char currentOrThrow(String message) {
+        Assert.isTrue(pos < source.length, message);
+        return source[pos];
+    }
+
+    private char currentOrDefault() {
+        if (pos < source.length) {
+            return source[pos];
         }
+        return '\0';
     }
 
-    private Operand readBrackets() {
-        Tokenizer tokenizer = branchOff(Utility::isBetweenBrackets, pos + 1); // enter expression
-        Operand result = new Operand(tokenizer.readTokens().solve());
-        pos = tokenizer.pos;
-        Assert.isTrue(peek() == ')', "missing closing parenthesis");
-        return result;
-    }
-
-    private Operand readFunctionCall() {
-        FunctionCallSite function = FUNCTION_CONTAINER.getFunction(source, pos);
-        pos += function.getName().length(); // skip function name
-        expectAndGet('(', "missing opening parenthesis for function call");
-
-        FunctionContext parameters = function.allocateParameters();
-        // only read parameters if the function supports it or if there are optional parameters filled in
-        // if current points to anything other than a closing parenthesis, we know we got a parameter
-        if (peek() != ')') {
-            Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", function.getName());
-            Tokenizer paramTokenizer = new Tokenizer(source, Utility::isValidArgument);
-            paramTokenizer.position(pos); // position them to read the first parameter
-
-            parameters.add(paramTokenizer.readTokens().solve());
-            while (paramTokenizer.peek() == ',') { // extra param coming
-                int oldPos = paramTokenizer.pos;
-                paramTokenizer = paramTokenizer.branchOff(Utility::isValidArgument, oldPos + 1);
-                parameters.add(paramTokenizer.readTokens().solve());
-            }
-            pos = paramTokenizer.pos;
+    private boolean match(char c) {
+        if (pos >= source.length || source[pos] != c) {
+            return false;
         }
-        expectAndGet(')', "missing closing parenthesis");
-
-        return new Operand(function.apply(parameters));
+        pos++;
+        return true;
     }
 
-    private Operand readOperand(char firstDigit, boolean negative) {
-        return new Operand(readDouble(firstDigit, negative));
+    private void matchOrThrow(char expected, String message) {
+        Assert.isTrue(match(expected), message);
     }
 
-    private double readDouble(char firstDigit, boolean negative) {
-        IntResult beforeComma = readInt(firstDigit, negative);
-        if (!hasAndGet('.')) { // skips decimal point if present
-            beforeComma.alignState();
-            return beforeComma.getValue();
-        }
-        double decimalPart = readDecimalPart();
-        beforeComma.alignState();
-
-        if (beforeComma.negative) {
-            return beforeComma.getValue() - decimalPart;
-        }
-        return beforeComma.getValue() + decimalPart;
+    private Tokenizer branchOff(IntPredicate newLoopCondition, int newPos) {
+        Tokenizer tokenizer = new Tokenizer(source, newLoopCondition);
+        tokenizer.pos = newPos;
+        return tokenizer;
     }
 
-    private IntResult readInt(char firstDigit, boolean negative) {
-        IntResult res = new IntResult(negative);
-        if (firstDigit != NULL_CHAR) {
-            res.push(firstDigit);
-        }
+    private void pushNegativeOperand() {
+        double value = -readDouble('0', false);
+        tokens.pushToken(new Operand(value));
+    }
+    
+    private void pushOperand(char initialChar) {
+        double value = readDouble(initialChar);
+        tokens.pushToken(new Operand(value));
+    }
 
-        loop: while (pos < source.length) {
-            char current = current();
+    private double readDouble(char initialChar) {
+        return readDouble(initialChar, true);
+    }
+
+    /**
+     * Reads a double starting at the current pos
+     * @param initialChar the first char of the number, or '0' if this was a negative sign
+     * @param readNumber whether the initialChar was actually part of the number, false if it accounts for a negative sign
+     * @return the read double
+     * @throws SyntaxException if the buffer contains some malformed double
+     */
+    private double readDouble(char initialChar, boolean readNumber) {
+        double result = initialChar - '0';
+
+        loop:
+        while (pos < source.length) {
+            char current = advance();
             switch (current) {
-                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> res.push(current);
-                case '-' -> {
-                    if (!res.empty) break loop;
-                    res.setNegative();
+                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
+                    result *= 10;
+                    result += current - '0';
+                    readNumber = true;
                 }
-                default -> { break loop; }
+                case '.' -> {
+                    Assert.isTrue(readNumber, "expected a number before the comma");
+                    double decimalPart = readDecimalPart();
+                    result += decimalPart;
+                    return result;
+                }
+                default -> {
+                    pos--; // read too far then
+                    break loop;
+                }
             }
-            pos++; // consume character
         }
-        return res;
+        if (!readNumber) {
+            // support for function calls of form -func()
+            Assert.isTrue(Utility.isLowercaseLetter(currentOrDefault()), "expected a number");
+            return 1; // pushNegativeOperand() inverts this, so we're actually returning -1
+        }
+        return result;
     }
 
     private double readDecimalPart() {
         int oldPos = pos;
         double result = 0;
-        long divider = 10;
+        double divider = 10; // always power of ten
 
-        loop: while (pos < source.length) {
-            char current = current();
+        loop:
+        while (pos < source.length) {
+            char current = source[pos];
             switch (current) {
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
-                    int value = current - '0';
-                    result += (double) value / divider;
+                    result += (current - '0') / divider;
                     divider *= 10;
-                    pos++; // consume character
+                    pos++;
                 }
                 default -> { break loop; }
             }
         }
-        Assert.isTrue(pos > oldPos, "could not read the decimal part of a number");
+        Assert.isTrue(pos > oldPos, "expected the decimal part of a number");
         return result;
     }
 
-    private class IntResult {
-        private int value;
-        private boolean negative; // if we have a negative sign before the number
-        private boolean empty; // an absence of a number, meaning we haven't read any numbers
+    private Operand readBrackets() {
+        Tokenizer tokenizer = branchOff(Utility::isBetweenBrackets, pos); // enter expression
+        Operand result = new Operand(tokenizer.readTokens().solve());
 
-        public IntResult(boolean negative) {
-            this.negative = negative;
-            this.empty = true;
-        }
+        Assert.isTrue(tokenizer.currentOrDefault() == ')', "missing closing parenthesis");
+        pos = tokenizer.pos + 1;
+        return result;
+    }
 
-        public void setNegative() {
-            Assert.isFalse(negative, "cannot have two negative signs in a row");
-            negative = true;
-        }
+    private Operand readFunctionCall() {
+        FunctionCallSite function = functionContainer.getFunction(source, pos - 1); // already incremented pos
+        pos += function.getName().length() - 1;
+        matchOrThrow('(', "missing opening parenthesis for function call");
 
-        public void push(char digit) {
-            value = value * 10 + (digit - '0');
-            empty = false;
-        }
+        FunctionContext parameters = function.allocateParameters();
+        char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call " + function.getName());
+        if (maybeClosingParenthesis != ')') { // arguments were provided
+            Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", function.getName());
 
-        // support for -func() syntax
-        public void alignState() {
-            if (!empty) return;
-            Assert.isTrue(Utility.isLowercaseLetter(peek()), "expected a number");
-            // if there's a function after the - sign, change our value to -1 to do -1 * func()
-            // negative is true, otherwise we wouldn't be here, so actual value is -1
-            value = 1;
-        }
+            // do while doesn't really work here due to that + 1
+            Tokenizer paramTokenizer = branchOff(Utility::isValidArgument, pos);
+            parameters.add(paramTokenizer.readTokens().solve());
 
-        /*
-        the tokenizer checks this flag because of the -0.xxx case
-        remember this class is only used for reading a double, and we don't store the decimal part ourselves
-        so the tokenizer might wrongly assume that we store a positive int value because -0 == 0
-        so -0.123 will be read as 0.123 if we didn't keep track of this flag
-         */
-        public int getValue() {
-            return negative ? -value : value;
+            while (paramTokenizer.currentOrDefault() == ',') {
+                paramTokenizer = paramTokenizer.branchOff(Utility::isValidArgument, paramTokenizer.pos + 1); // + 1 to consume comma
+                parameters.add(paramTokenizer.readTokens().solve());
+            }
+            pos = paramTokenizer.pos; // move to ')' (or something else if there's an error)
         }
+        matchOrThrow(')', "missing closing parenthesis for function call " + function.getName());
+
+        return new Operand(function.apply(parameters));
     }
 }

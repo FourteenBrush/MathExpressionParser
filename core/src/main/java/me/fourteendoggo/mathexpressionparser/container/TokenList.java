@@ -9,7 +9,7 @@ import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 public class TokenList {
     private LinkedCalculation head, tail;
-    private TokenType lastType = TokenType.OPERATOR;
+    private TokenType lastType = TokenType.OPERATOR; // need to assure incoming type is different from the current one
     private int numCalculations;
 
     public void pushToken(Token token) {
@@ -144,15 +144,13 @@ public class TokenList {
         }
 
         StringBuilder builder = new StringBuilder();
-        builder.append('[');
-
         for (LinkedCalculation node = head; node != null; node = node.next) {
             if (builder.length() > 1) {
                 builder.append(" -> ");
             }
             builder.append(node);
         }
-        return builder.append(']').toString();
+        return builder.toString();
     }
 
     /**
@@ -188,6 +186,12 @@ public class TokenList {
             return operator.getPriority() >= next.operator.getPriority();
         }
 
+        /**
+         * Pushes a token to this calculation object.
+         * The caller should check {@link #isComplete()} before to ensure they don't overwrite the same fields again,
+         * as this just sets fields and doesn't check anything.
+         * @param token the token to push, either an operand or an operator
+         */
         public void pushToken(Token token) {
             switch (token.getType()) {
                 case OPERAND -> right = (Operand) token;
@@ -195,16 +199,25 @@ public class TokenList {
             }
         }
 
+        /**
+         * @return true if this calculation is complete and can be solved
+         */
         public boolean isComplete() {
             return operator != null && right != null; // left will never be null so no need to check
         }
 
+        /**
+         * Tries to simplify this calculation, effectively checking if its operator priority is {@link Operator#HIGHEST_PRIORITY}. <br>
+         * Then solving the calculation and marking it as "incomplete" again to allow further adding of tokens.
+         * @return true, if this calculation can be simplified, false otherwise
+         */
         public boolean simplify() {
             if (operator.getPriority() != Operator.HIGHEST_PRIORITY) {
                 return false;
             }
             double result = solve();
             left.setValue(result);
+            operator = null;
             right = null;
             return true;
         }
@@ -214,7 +227,14 @@ public class TokenList {
         }
 
         // some support to work with incomplete calculations f.e. [3,null,null] (3)
+        /**
+         * Either solves this calculation if complete, or returns the left operand if that's the only thing set,
+         * throws otherwise
+         * @return the first operands value, or the solved expressions value
+         * @throws SyntaxException if we hold both a left operand and an operator (how even would we solve that?)
+         */
         public double tryToSolve() {
+            // illegal state of having a left operand and right operand but no operator should never occur
             if (operator == null) {
                 return left.getValue();
             }
@@ -225,11 +245,11 @@ public class TokenList {
         @Override
         public String toString() {
             if (operator == null) { // right also null
-                return "{" + left + "}";
+                return "[" + left + "]";
             } else if (right == null) { // only right null
-                return "{" + left + ", " + operator.getSymbol() + "}";
+                return "[" + left + ", " + operator.getSymbol() + "]";
             }
-            return "{" + left + ", " + operator + ", " + right + "}";
+            return "[" + left + ", " + operator + ", " + right + "]";
         }
     }
 }

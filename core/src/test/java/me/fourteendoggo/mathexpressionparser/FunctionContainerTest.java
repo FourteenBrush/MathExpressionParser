@@ -53,8 +53,8 @@ public class FunctionContainerTest {
         IntStream.range(0, 20).forEach(parameters::add);
 
         assertEquals(20, parameters.size());
-        char[] buffer = "max(bla bla bla)".toCharArray();
-        assertEquals(19, container.getFunction(buffer, 0).apply(parameters));
+        char[] buf = "max(bla bla bla)".toCharArray();
+        assertEquals(19, container.getFunction(buf, 0).apply(parameters));
     }
 
     @Test

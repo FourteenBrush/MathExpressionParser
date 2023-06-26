@@ -43,26 +43,25 @@ public class CharTree<T> {
             crawl = crawl.putChildIfAbsent(current, () -> new Node(current, inputValidator));
         }
         char lastChar = word[word.length - 1];
-        Node lastNode = crawl.putChild(lastChar, () -> new ValueHoldingNode<>(lastChar, inputValidator, instance));
+        Node lastNode = crawl.putChild(lastChar, new ValueHoldingNode<>(lastChar, inputValidator, instance));
         Assert.isFalse(lastNode instanceof ValueHoldingNode, "instance was already inserted");
     }
 
     /**
      * Searches for a word in the given buffer, starting at the given position. <br/>
      * The searching will stop when the end of the buffer is reached or the input validator rejects the current character. <br/>
-     * @param buffer the buffer to search in
+     * @param buf the buffer to search in
      * @param pos the starting index
      * @return the value found or null if no value was found
      * @throws SyntaxException if a valid character is not present as a path in this tree
      */
     @SuppressWarnings("unchecked")
-    public T search(char[] buffer, int pos) {
+    public T search(char[] buf, int pos) {
         Node crawl = root;
         char current;
-        while (pos < buffer.length && inputValidator.test(current = buffer[pos++])) {
-            Node child = crawl.children[current - 'a'];
-            Assert.notNull(child, "could not find node for character " + current);
-            crawl = child;
+        while (pos < buf.length && inputValidator.test(current = buf[pos++])) {
+            crawl = crawl.children[current - 'a'];
+            if (crawl == null) return null;
         }
         if (crawl instanceof ValueHoldingNode<?> valueNode) {
             return (T) valueNode.heldValue;
@@ -94,10 +93,10 @@ public class CharTree<T> {
             return children[index];
         }
 
-        public Node putChild(char value, Supplier<Node> nodeSupplier) {
+        public Node putChild(char value, Node node) {
             int index = indexOrThrow(value);
             Node oldValue = children[index];
-            children[index] = nodeSupplier.get();
+            children[index] = node;
             return oldValue;
         }
 

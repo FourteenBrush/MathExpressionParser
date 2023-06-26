@@ -27,6 +27,7 @@ public class FunctionContainer {
     }
 
     private void insertDefaultFunctions() {
+        // trigonometric
         insertFunction("sin", Math::sin);
         insertFunction("cos", Math::cos);
         insertFunction("tan", Math::tan);
@@ -38,25 +39,31 @@ public class FunctionContainer {
         insertFunction("tanh", Math::tanh);
         insertFunction("sqrt", Math::sqrt);
         insertFunction("cbrt", Math::cbrt);
+
+        insertFunction("pow", Math::pow);
         insertFunction("log", Math::log);
         insertFunction("rad", Math::toRadians);
         insertFunction("floor", Math::floor);
         insertFunction("ceil", Math::ceil);
-        insertFunction("abs", d -> d < 0 ? -d : d);
+        insertFunction("abs", Math::abs);
         insertFunction("int", d -> (int) d);
-        insertFunction("and", (a, b) -> a != 0 && b != 0 ? 1 : 0);
+        // boolean
+        insertFunction("and", Utility::boolAnd);
         insertFunction("nand", (a, b) -> a != 0 && b != 0 ? 0 : 1);
-        insertFunction("or", (a, b) -> a != 0 || b != 0 ? 1 : 0);
+        insertFunction("or", Utility::boolOr);
         insertFunction("xor", (a, b) -> a != 0 ^ b != 0 ? 1 : 0);
-        insertFunction("not", a -> a == 0 ? 1 : 0);
+        insertFunction("not", Utility::boolNot);
         insertFunction("nor", (a, b) -> a != 0 || b != 0 ? 0 : 1);
         insertFunction("xnor", (a, b) -> a != 0 ^ b != 0 ? 0 : 1);
+        // no idea what this one is useful for, doubles are already representable as booleans
+        // maybe to transform a double to either 1 or 0
+        insertFunction("bool", d -> d == 0 ? 0 : 1);
 
         // constants
         insertFunction(new FunctionCallSite("pi", 0, ctx -> Math.PI));
         insertFunction(new FunctionCallSite("e", 0, ctx -> Math.E));
 
-        // theoretical limit of Integer.MAX_VALUE
+        // theoretical limit of Integer.MAX_VALUE parameters
         insertFunction(new FunctionCallSite("min", 2, Integer.MAX_VALUE, ctx -> {
             double min = ctx.getDouble(0);
             for (int i = 1; i < ctx.size(); i++) {
@@ -100,7 +107,7 @@ public class FunctionContainer {
                 throw new SyntaxException(e.getMessage());
             }
         }));
-        // must be handled with care as people can and will abuse this, maybe add a permission or straight up override this function?
+        // must be handled with care as people can and will abuse this, maybe add a permission or straight up overwrite this function?
         insertFunction(new FunctionCallSite("exit", 0, ctx -> {
             System.out.println("Exiting...");
             System.exit(0);
@@ -131,13 +138,13 @@ public class FunctionContainer {
         functions.insert(name, function);
     }
 
-    public FunctionCallSite getFunction(char[] buffer, int fromPos) {
-        FunctionCallSite function = functions.search(buffer, fromPos);
+    public FunctionCallSite getFunction(char[] buf, int fromPos) {
+        FunctionCallSite function = functions.search(buf, fromPos);
         if (function == null) {
             // some unoptimized stuff, we are throwing an exception anyway, so it's not that bad
-            String bufferAsString = new String(buffer, fromPos, buffer.length - fromPos);
-            // there might be a better way to get the entered function name but as long as it works its good
-            String functionName = bufferAsString.split("[^a-zA-Z]")[0];
+            // there might be a better way to get the entered function name
+            String bufAsString = new String(buf, fromPos, buf.length - fromPos);
+            String functionName = bufAsString.split("[^a-zA-Z]")[0];
             throw new FunctionNotFoundException("function " + functionName + " not found");
         }
         return function;

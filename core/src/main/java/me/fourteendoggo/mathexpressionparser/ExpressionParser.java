@@ -1,11 +1,11 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.container.TokenList;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
+import java.util.Objects;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
@@ -22,11 +22,11 @@ public class ExpressionParser {
      * @throws SyntaxException if the given expression is invalid or empty
      */
     public static double parse(String input) {
-        Assert.notNull(input, "input was null");
+        Objects.requireNonNull(input, "input was null");
         Assert.isFalse(input.isEmpty(), "input was empty");
 
-        TokenList tokens = new Tokenizer(input.toCharArray()).readTokens();
-        return tokens.solve();
+        Tokenizer tokenizer = new Tokenizer(input.toCharArray());
+        return tokenizer.readTokens().solve();
     }
 
     /**

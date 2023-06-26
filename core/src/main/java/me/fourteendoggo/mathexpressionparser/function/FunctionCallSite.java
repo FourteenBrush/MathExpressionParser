@@ -1,5 +1,7 @@
 package me.fourteendoggo.mathexpressionparser.function;
 
+import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
+import me.fourteendoggo.mathexpressionparser.symbol.SymbolType;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 import java.util.function.ToDoubleFunction;
@@ -8,7 +10,7 @@ import java.util.function.ToDoubleFunction;
  * A placeholder for an invokable function.
  * @see FunctionContext
  */
-public class FunctionCallSite {
+public class FunctionCallSite implements Symbol {
     private final String name;
     private final int minArgs, maxArgs;
     private final ToDoubleFunction<FunctionContext> function;
@@ -25,6 +27,11 @@ public class FunctionCallSite {
         this.minArgs = minArgs;
         this.maxArgs = maxArgs;
         this.function = function;
+    }
+
+    @Override
+    public SymbolType getType() {
+        return SymbolType.FUNCTION;
     }
 
     public String getName() {
