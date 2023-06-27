@@ -80,10 +80,10 @@ assert pi == Math.PI;
 
 Currently the variables `pi`, `e`, `true` (1) and `false` (0) are builtin.
 
-#### Inserting custom functions and variables.
+### Inserting custom functions and variables.
 
 To insert custom functions or variables, you need to call the appropriate `insertFunction` method on the `ExpressionParser` class.
-This inserts into the global symbol lookup, examples:
+This inserts into the global execution environment, examples:
 
 ```java
 /* This inserts a function called twice that doubles its input */
@@ -110,36 +110,37 @@ double result = ExpressionParser.parse("add(1, 2, 4)");
 assert result == 7;
 ```
 
-For more complex functions, take a look at the method that accepts a [FunctionCallSite](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
+For more complex functions, take a look at the method that accepts a `Symbol` and pass in a 
+[FunctionCallSite](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
 
 Inserting variables is very similar:
 
 ```java
-ExpressionParser.insertVariable(new Variable("magic", 1.234));
+ExpressionParser.insertSymbol(new Variable("magic", 1.234));
 double magic = ExpressionParser.parse("magic");
 assert magic == 1.234;
 ```
 
-#### Using a custom execution environment (recommended):
+### Using a custom execution environment (recommended):
 
 As mentioned above, inserting functions or variables will place them in the global symbol lookup.
 If you want more flexibility over what symbols can be used in what context, you can explicitly provide a
-`ExecutionEnv`:.
+`ExecutionEnv`:
 
 ```java
 ExecutionEnv env = new ExecutionEnv();
 // 'today' function is only bound to this environment
-env.insertFunction("today", () -> {
-    DayOfWeek day = LocalDate.now();
+env.insertFunction("day", () -> {
+    DayOfWeek day = LocalDate.now().getDayOfWeek();
     return day.getValue();
 });
 
 // still have to provide the environment where that function will be searched for
-double dayOfWeek = ExpressionParser.parse("today()", env); 
+double dayOfWeek = ExpressionParser.parse("day()", env); 
 assert dayOfWeek >= 1 && dayOfWeek <= 7;
 
 // ERROR: global environment does not have this function, we did not specify our own one so the global one is used
-double error = ExpressionParser.parse("today()");
+double error = ExpressionParser.parse("day()");
 ```
 
 `Note:` function and variable names must only contain lowercase letters (a-z), this is subject to change.
@@ -178,7 +179,7 @@ Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpression
 
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
-A bunch of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file, ignore the double quotes.
+A bunch of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file.
 
 ## TODO
 
@@ -186,8 +187,35 @@ A bunch of examples (tests, which should all be working) can be found in the [te
 - [x] Implementing function calls
 - [x] Making the solving algorithm more efficient
 - [x] Implementing boolean logic, currently these can be implemented with functions
-- [ ] Implementing variables and constants
-- [ ] Make it possible to insert variables and functions on a non-global base
+- [x] Implementing variables and constants
+- [x] Make it possible to insert variables and functions on a non-global base
+- [ ] Allowing to insert variables through the parser, e.g. "x = sqrt(16)"
 
-## More examples
+## More examples:
 
+```java
+Scanner in = new Scanner(System.in);
+
+ExecutionEnv env = new ExecutionEnv();
+env.insertFunction("input", in::nextDouble);
+
+env.insertFunction("isleapyear", 1, ctx -> {
+    // need a FunctionContext param in order to get an int
+    int year = ctx.getInt(0); 
+    // copied from java.time.Year.isLeap
+    return Utility.boolToDouble(java.time.Year.isLeap(year));
+});
+
+double result = ExpressionParser.parse("isleapyear(input())", env);
+boolean isLeapYear = Utility.doubleToBool(result);
+```
+
+```java
+ExecutionEnv env = new ExecutionEnv();
+env.insertSymbol(new Variable("x", 4));
+env.insertSymbol(new Variable("y", 2));
+env.insertSymbol(new Variable("z", 4));
+
+double vectorMagnitude = ExpressionParser.parse("sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))", env);
+assert vectorMagnitude == 6;
+```

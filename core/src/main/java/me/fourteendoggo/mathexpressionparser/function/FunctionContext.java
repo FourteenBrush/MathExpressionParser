@@ -7,7 +7,7 @@ import me.fourteendoggo.mathexpressionparser.utils.Utility;
 import java.util.Arrays;
 
 /**
- * A class that provides parameters for a {@link FunctionCallSite}.
+ * A class that provides parameters for a {@link FunctionCallSite}. Acts as an array of doubles.
  */
 public class FunctionContext {
     private double[] parameters;
@@ -67,7 +67,9 @@ public class FunctionContext {
     public int getInt(int index) {
         double value = getDouble(index);
         int intValue = (int) value;
-        Assert.isFalse(intValue != value, "expected an integer as %s argument, got %s", Utility.getOrdinalName(index), value);
+        if (intValue != value) {
+            throw new SyntaxException("expected an integer as %s arguments, got %s", Utility.getOrdinalName(index), value);
+        }
         return intValue;
     }
 
@@ -81,8 +83,9 @@ public class FunctionContext {
      */
     public double getBoundedDouble(int index, double min, double max) {
         double value = getDouble(index);
-        Assert.isFalse(value < min || value > max,
-                "expected a value between %s and %s as %s argument, got %s", min, max, Utility.getOrdinalName(index), value);
+        if (value < min || value > max) {
+            throw new SyntaxException("expected a value between %s and %s as %s argument, got %s", Utility.getOrdinalName(index), value);
+        }
         return value;
     }
 
@@ -101,7 +104,9 @@ public class FunctionContext {
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < size; i++) {
             sb.append(parameters[i]);
-            if (i != size - 1) sb.append(", ");
+            if (i != size - 1) {
+                sb.append(", ");
+            }
         }
         return sb.append(']').toString();
     }

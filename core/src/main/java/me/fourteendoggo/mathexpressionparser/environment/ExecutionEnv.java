@@ -18,13 +18,19 @@ public class ExecutionEnv {
 
     public ExecutionEnv() {
         symbolLookup = new SymbolLookup();
-        BuiltinSymbols.init(symbolLookup);
+        BuiltinSymbols.init(this);
     }
 
+    /**
+     * @see #insertFunction(String, int, int, ToDoubleFunction)
+     */
     public void insertFunction(String name, DoubleSupplier fn) {
         insertSymbol(new FunctionCallSite(name, 0, ctx -> fn.getAsDouble()));
     }
 
+    /**
+     * @see #insertFunction(String, int, int, ToDoubleFunction)
+     */
     public void insertFunction(String name, DoubleUnaryOperator fn) {
         insertSymbol(new FunctionCallSite(name, 1, ctx -> {
             double first = ctx.getDouble(0);
@@ -32,6 +38,9 @@ public class ExecutionEnv {
         }));
     }
 
+    /**
+     * @see #insertFunction(String, int, int, ToDoubleFunction)
+     */
     public void insertFunction(String name, DoubleBinaryOperator fn) {
         insertSymbol(new FunctionCallSite(name, 2, ctx -> {
             double first = ctx.getDouble(0);
@@ -40,6 +49,20 @@ public class ExecutionEnv {
         }));
     }
 
+    /**
+     * @see #insertFunction(String, int, int, ToDoubleFunction)
+     */
+    public void insertFunction(String name, int numArgs, ToDoubleFunction<FunctionContext> fn) {
+        insertSymbol(new FunctionCallSite(name, numArgs, numArgs, fn));
+    }
+
+    /**
+     * Inserts a function with a certain amount of parameters, which are retrieved from the function context.
+     * @param name the function name
+     * @param minArgs the minimum amount of arguments
+     * @param maxArgs the maximum amount of arguments
+     * @param fn the function
+     */
     public void insertFunction(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
         insertSymbol(new FunctionCallSite(name, minArgs, maxArgs, fn));
     }

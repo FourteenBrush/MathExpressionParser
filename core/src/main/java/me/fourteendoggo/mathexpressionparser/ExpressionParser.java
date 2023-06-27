@@ -4,6 +4,7 @@ import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
+import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
 import me.fourteendoggo.mathexpressionparser.symbol.Variable;
 import me.fourteendoggo.mathexpressionparser.token.Tokenizer;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
@@ -27,7 +28,7 @@ public class ExpressionParser {
      * Parses the given expression and returns the result
      *
      * @param input the expression to parse
-     * @param env the symbol lookup to obtain symbols from
+     * @param env the execution environment to obtain symbols from
      * @return the result of the expression
      * @throws NullPointerException if the expression or env is null
      * @throws SyntaxException if the given expression is invalid or empty
@@ -45,48 +46,47 @@ public class ExpressionParser {
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, DoubleSupplier fn) {
-        insertFunction(new FunctionCallSite(functionName, 0, ctx -> fn.getAsDouble()));
+        insertSymbol(new FunctionCallSite(functionName, 0, ctx -> fn.getAsDouble()));
     }
 
     /**
-     * @see #insertFunction(String, int, int, ToDoubleFunction)
+     * @see ExecutionEnv#insertFunction(String, DoubleUnaryOperator)
      */
     public static void insertFunction(String functionName, DoubleUnaryOperator fn) {
         getDefaultEnv().insertFunction(functionName, fn);
     }
 
     /**
-     * @see #insertFunction(String, int, int, ToDoubleFunction)
+     * @see ExecutionEnv#insertFunction(String, DoubleBinaryOperator)
      */
     public static void insertFunction(String functionName, DoubleBinaryOperator fn) {
         getDefaultEnv().insertFunction(functionName, fn);
     }
 
     /**
-     * Inserts a function with a variable amount of parameters into the default symbol lookup.
-     * @param functionName the name of the function, only lowercase characters
-     * @param minArgs the minimum amount of arguments the function can have, can be the same as maxArgs
-     * @param maxArgs the maximum amount of arguments the function can have, can be the same as minArgs
-     * @param fn the function to call
+     * Inserts a function into the default execution environment.
+     * @see ExecutionEnv#insertFunction(String, int, ToDoubleFunction)
+     */
+    public static void insertFunction(String functionName, int numArgs, ToDoubleFunction<FunctionContext> fn) {
+        insertFunction(functionName, numArgs, numArgs, fn);
+    }
+
+    /**
+     * Inserts a function into the default execution environment.
+     * @see ExecutionEnv#insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
         getDefaultEnv().insertFunction(functionName, minArgs, maxArgs, fn);
     }
 
     /**
-     * Inserts a complex function
-     * @param function the function to insert
+     * Inserts a symbol into the default execution environment.
+     * @param symbol the symbol to insert, can be either a variable or a function
+     * @see FunctionCallSite
+     * @see Variable
      */
-    public static void insertFunction(FunctionCallSite function) {
-        getDefaultEnv().insertSymbol(function);
-    }
-
-    /**
-     * Inserts a variable into the default symbol lookup.
-     * @param variable the variable to insert.
-     */
-    public static void insertVariable(Variable variable) {
-        getDefaultEnv().insertSymbol(variable);
+    public static void insertSymbol(Symbol symbol) {
+        getDefaultEnv().insertSymbol(symbol);
     }
 
     public static ExecutionEnv getDefaultEnv() {
