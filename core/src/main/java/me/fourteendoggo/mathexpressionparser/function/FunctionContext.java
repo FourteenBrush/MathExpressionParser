@@ -94,8 +94,10 @@ public class FunctionContext {
      * @return the parameter at the given index
      */
     public double getDouble(int index) {
-        Assert.indexWithinBounds(index, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
-                index, size, size - 1);
+        Assert.indexWithinBounds(
+                index, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
+                index, size, size - 1
+        );
         return parameters[index];
     }
 

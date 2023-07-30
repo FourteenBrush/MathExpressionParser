@@ -3,6 +3,10 @@ package me.fourteendoggo.mathexpressionparser.token;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
+/**
+ * Represents a parsed expression in a solvable form. <br>
+ * @see this#solve()
+ */
 public class TokenList {
     private LinkedCalculation head, tail;
     private TokenType lastType = TokenType.OPERATOR; // need to assure incoming type is different from the current one
@@ -90,6 +94,9 @@ public class TokenList {
         };
     }
 
+    /**
+     * Solves a chain of calculations, leaves one calculation behind which can then be solved.
+     */
     private void shorten() {
         // lets take {2+3}<->{3*4}<->{4+2} as example (expression: 2+3*4+2) and {3*4} as current
         for (LinkedCalculation current = head; current != null; current = current.next) {
@@ -129,6 +136,9 @@ public class TokenList {
         }
     }
 
+    /**
+     * @return the {@link TokenType} of the last token pushed, or {@link TokenType#OPERATOR}
+     */
     public TokenType getLastType() {
         return lastType;
     }

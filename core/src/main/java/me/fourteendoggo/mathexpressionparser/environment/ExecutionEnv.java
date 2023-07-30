@@ -76,7 +76,14 @@ public class ExecutionEnv {
         symbolLookup.insert(symbol);
     }
 
-    // INTERNAL
+    /**
+     * INTERNAL USAGE, DO NOT USE <br>
+     * Looks up a symbol based on an input
+     * @param buf the input as a char array
+     * @param pos the position to start searching at
+     * @return the found symbol
+     * @throws SymbolNotFoundException if no symbol could be found
+     */
     public Symbol lookupSymbol(char[] buf, int pos) {
         Symbol symbol = symbolLookup.lookup(buf, pos); // already incremented pos
         if (symbol == null) {

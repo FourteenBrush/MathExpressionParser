@@ -59,7 +59,7 @@ Note that this method throws an unchecked SyntaxException if the syntax of the e
 There is builtin support for trigonometric and other standard functions, click
 [here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to seem them all.
 
-Functions are called like normal java method, they can have zero or more arguments and can be nested:
+Functions are called like normal java methods, they can have zero or more arguments and can be nested:
 
 ```java
 double result = ExpressionParser.parse("sin(rad(90))");

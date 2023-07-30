@@ -178,7 +178,7 @@ public class Tokenizer {
 
     /**
      * Reads a double starting at the current pos
-     * @param initialChar the first char of the number, or '0' if this was a negative sign
+     * @param initialChar the first char of the number, or '0' if this was a negative number
      * @param readNumber whether the initialChar was actually part of the number, false if it accounts for a negative sign
      * @return the read double
      * @throws SyntaxException if the buffer contains some malformed double

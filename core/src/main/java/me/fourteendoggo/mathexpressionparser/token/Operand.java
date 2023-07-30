@@ -1,5 +1,8 @@
 package me.fourteendoggo.mathexpressionparser.token;
 
+/**
+ * A literal number, wrapped to be processed.
+ */
 public class Operand implements Token {
     private double value;
 

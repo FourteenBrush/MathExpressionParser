@@ -2,6 +2,7 @@ package me.fourteendoggo.mathexpressionparser.utils;
 
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 
+// inline those functions if java will ever allow us to
 public interface Assert {
 
     static void notNull(Object o, String message) {

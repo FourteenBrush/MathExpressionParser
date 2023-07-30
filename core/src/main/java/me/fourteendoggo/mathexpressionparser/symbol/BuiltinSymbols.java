@@ -9,6 +9,10 @@ import java.util.SplittableRandom;
 public abstract class BuiltinSymbols {
     private static final SplittableRandom RANDOM = new SplittableRandom();
 
+    /**
+     * Initializes the given {@link ExecutionEnv} with all the standard functions and variables
+     * @param env the environment
+     */
     public static void init(ExecutionEnv env) {
         // trigonometric
         env.insertFunction("sin", Math::sin);
