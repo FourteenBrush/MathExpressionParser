@@ -49,9 +49,9 @@ public class Tokenizer {
                 case '<' -> {
                     switch (advanceOrThrow()) {
                         case '<' -> tokens.pushToken(Operator.LEFT_SHIFT);
-                        case '=' -> tokens.pushToken(Operator.LESS_THEN_OR_EQUAL);
+                        case '=' -> tokens.pushToken(Operator.LESS_THAN_OR_EQUAL);
                         default -> {
-                            tokens.pushToken(Operator.LESS_THEN);
+                            tokens.pushToken(Operator.LESS_THAN);
                             pos--; // put the character after < back
                         }
                     }
@@ -59,9 +59,9 @@ public class Tokenizer {
                 case '>' -> {
                     switch (advanceOrThrow()) {
                         case '>' -> tokens.pushToken(Operator.RIGHT_SHIFT);
-                        case '=' -> tokens.pushToken(Operator.GREATER_THEN_OR_EQUAL);
+                        case '=' -> tokens.pushToken(Operator.GREATER_THAN_OR_EQUAL);
                         default -> {
-                            tokens.pushToken(Operator.GREATER_THEN);
+                            tokens.pushToken(Operator.GREATER_THAN);
                             pos--; // put the character after > back
                         }
                     }
