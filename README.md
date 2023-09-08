@@ -200,9 +200,9 @@ ExecutionEnv env = new ExecutionEnv();
 env.insertFunction("input", in::nextDouble);
 
 env.insertFunction("isleapyear", 1, ctx -> {
-    // need a FunctionContext param in order to get an int
-    int year = ctx.getInt(0); 
-    // copied from java.time.Year.isLeap
+    // you need a FunctionContext parameter to force the input to be an int
+    // as all parameters are doubles implicitly  
+    int year = ctx.getInt(0);
     return Utility.boolToDouble(java.time.Year.isLeap(year));
 });
 

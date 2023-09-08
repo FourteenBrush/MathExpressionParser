@@ -15,11 +15,15 @@ import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
 
+@SuppressWarnings("unused")
 public class ExpressionParser {
     private static ExecutionEnv DEFAULT_ENV;
 
     private ExpressionParser() {}
 
+    /**
+     * @see ExpressionParser#parse(String, ExecutionEnv)
+     */
     public static double parse(String input) {
         return parse(input, getDefaultEnv());
     }
@@ -89,7 +93,7 @@ public class ExpressionParser {
         getDefaultEnv().insertSymbol(symbol);
     }
 
-    public static ExecutionEnv getDefaultEnv() {
+    private static ExecutionEnv getDefaultEnv() {
         if (DEFAULT_ENV == null) {
             DEFAULT_ENV = new ExecutionEnv();
         }
