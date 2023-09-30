@@ -50,7 +50,7 @@ public class ExpressionParser {
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, DoubleSupplier fn) {
-        insertSymbol(new FunctionCallSite(functionName, 0, ctx -> fn.getAsDouble()));
+        getDefaultEnv().insertFunction(functionName, fn);
     }
 
     /**
