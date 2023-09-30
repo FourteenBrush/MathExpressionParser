@@ -52,14 +52,15 @@ double result = ExpressionParser.parse("3(5-1)");
 assert result == 12;
 ```
 
-Note that this method throws an unchecked SyntaxException if the syntax of the expression is invalid.
+> [!NOTE]
+> This method throws an unchecked `SyntaxException` if the syntax of the expression is invalid.
 
 ### Functions and variables
 
-There is builtin support for trigonometric and other standard functions, click
+There is built-in support for trigonometric and other standard functions, click
 [here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to seem them all.
 
-Functions are called like normal java methods, they can have zero or more arguments and can be nested:
+Functions are called like normal Java methods, they can have zero or more arguments and can be nested:
 
 ```java
 double result = ExpressionParser.parse("sin(rad(90))");
@@ -78,7 +79,7 @@ double pi = ExpressionParser.parse("pi");
 assert pi == Math.PI;
 ```
 
-Currently the variables `pi`, `e`, `true` (1) and `false` (0) are builtin.
+Currently the variables `pi`, `e`, `true` (1) and `false` (0) are built-in.
 
 ### Inserting custom functions and variables.
 
@@ -92,8 +93,8 @@ double result = ExpressionParser.parse("twice(2)");
 assert result == 4;
 ```
 
-Functions cannot be overloaded, but you can define a function which accepts a variable amount of arguments.  
-PS: don't actually do this, there is already a builtin sum function:
+Functions cannot be overloaded, but you can define a function that accepts a variable amount of arguments.  
+PS: don't actually do this, there is already a built-in sum function:
 ```java
 /* 
  * This inserts a function called 'add' that returns the sum of all of its arguments.
@@ -143,12 +144,13 @@ assert dayOfWeek >= 1 && dayOfWeek <= 7;
 double error = ExpressionParser.parse("day()");
 ```
 
-`Note:` function and variable names must only contain lowercase letters (a-z), this is subject to change.
+> [!NOTE]
+> Function and variable names must only contain lowercase letters (a-z), this is subject to change.
 
 ### Operators
 
 For all logical operators, a 0 means false, whereas everything else is true. To make it more clear, you can use
-the builtin `true` and `false` variables.
+the built-in `true` and `false` variables.
 
 | Operator | Example  | Explanation                                                |
 |:--------:|----------|------------------------------------------------------------|
@@ -163,7 +165,7 @@ the builtin `true` and `false` variables.
 |    >>    | 32 >> 2  | shifts 32 2 bits to the right                              |
 |    <     | 3 < 1    | returns 1 if 3 is smaller than 1, 0 otherwise              |
 |    >     | 4 > 2    | returns 1 if 4 is bigger than 2, 0 otherwise               |
-|    <=    | 12 <= 3  | returns 1 if 12 is smaller then or equal to 3, 0 otherwise |
+|    <=    | 12 <= 3  | returns 1 if 12 is smaller than or equal to 3, 0 otherwise |
 |    >=    | 10 >= 9  | returns 1 if 10 is bigger than or equal to 9, 0 otherwise  |
 |    ==    | 10 == 9  | returns 1 if 10 equals 9, 0 otherwise                      |
 |    !=    | 10 != 9  | returns 1 if 10 does not equal 9, 0 otherwise              |
@@ -179,7 +181,7 @@ Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpression
 
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
-A bunch of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file.
+A list of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file.
 
 ## TODO
 
@@ -190,6 +192,7 @@ A bunch of examples (tests, which should all be working) can be found in the [te
 - [x] Implementing variables and constants
 - [x] Make it possible to insert variables and functions on a non-global base
 - [ ] Allowing to insert variables through the parser, e.g. "x = sqrt(16)"
+- [ ] Allow multi-line expressions
 
 ## More examples:
 
