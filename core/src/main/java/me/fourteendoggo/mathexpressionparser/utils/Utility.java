@@ -60,4 +60,37 @@ public class Utility {
     public static boolean isBetweenBrackets(int c) {
         return c != ')';
     }
+
+    public static int gcd(int a, int b) {
+        if (a < 0) a = -a;
+        if (b < 0) b = -b;
+        if (a < b) { // force a >= b
+            int tmp = a;
+            a = b;
+            b = tmp;
+        }
+
+        while (b != 0) {
+            int tmp = b;
+            b = a % b;
+            a = tmp;
+        }
+        return a;
+    }
+
+    private static int fastUnsignedGcd(int a, int b) {
+        while (b != 0) {
+            int tmp = b;
+            b = a % b;
+            a = tmp;
+        }
+        return a;
+    }
+
+    public static int lcm(int a, int b) {
+        if (b == 0) return 0;
+        if (a < 0) a = -a;
+        if (b < 0) b = -b;
+        return a / fastUnsignedGcd(a, b) * b;
+    }
 }

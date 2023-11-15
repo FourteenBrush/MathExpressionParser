@@ -87,7 +87,7 @@ public abstract class BuiltinSymbols {
                 return Math.round(ctx.getDouble(0));
             }
             double value = ctx.getDouble(0);
-            int places = ctx.getBoundedInt(1, 0, Integer.MAX_VALUE);
+            int places = ctx.getInt(1);
             double factor = Utility.getPowerOfTen(places);
 
             return Math.round(value * factor) / factor;
@@ -103,6 +103,16 @@ public abstract class BuiltinSymbols {
                 // random throws this when f.e. the bound > the origin, translate this into a SyntaxException
                 throw new SyntaxException(e.getMessage());
             }
+        });
+        env.insertFunction("gcd", 2, ctx -> {
+            int a = ctx.getInt(0);
+            int b = ctx.getInt(1);
+            return Utility.gcd(a, b);
+        });
+        env.insertFunction("lcm", 2, ctx -> {
+            int a = ctx.getInt(0);
+            int b = ctx.getInt(1);
+            return Utility.lcm(a, b);
         });
     }
 }
