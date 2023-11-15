@@ -5,7 +5,7 @@ import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 /**
  * Represents a parsed expression in a solvable form. <br>
- * @see this#solve()
+ * @see TokenList#solve()
  */
 public class TokenList {
     private LinkedCalculation head, tail;
@@ -45,21 +45,21 @@ public class TokenList {
      * Simple expressions like 1+1 or 1*3+1 will be solved in one pass.
      * <h2>Algorithm explained:</h2>
      * The algorithm works with a linked list of calculations, each calculation object is a
-     * wrapper for an operator and its surrounding operands, this causes overlapping with operands but is perfectly fine <br/>
+     * wrapper for an operator and its surrounding operands, this causes overlapping with operands but is perfectly fine. <br/>
      * <p/>
      * To solve, we start at the head of the list and take two calculations. <br/>
      * If the first calculation has an operator with a higher or the same priority,
-     * we can safely solve the first calculation and apply its result to the left of the second calculation
+     * we can safely solve the first calculation and set its result to the left of the second calculation
      * and unlink that first calculation. <br/>
      * For example: <br/>
      * <p/>
      * Expression before: 3 * 4 + 2 <br/>
-     * Transformed to calculations: [3 * 4] <-> [4 + 2]</-> <br/>
-     * Resulting calculation after applying this algorithm would be: [12 + 2]
+     * Transformed to calculations: [3 * 4] -> [4 + 2] <br/>
+     * Resulting calculation after applying this algorithm would be: [12 + 2] (left calculation could be solved).
      * <p/>
      * This algorithm is repeated until there is only one calculation left, which is then solved and returned. <br/>
      * This might involve looping multiple times over the expression, keeping higher priority operators
-     * at the beginning reduces this overhead because the first calculation can always be solved.
+     * at the beginning reduces this small 'overhead' because the first calculation can always be solved.
      *
      * @return the result of the expression
      */
@@ -71,16 +71,16 @@ public class TokenList {
                 LinkedCalculation first = head;
                 LinkedCalculation second = first.next;
 
-                // x op y op was previously throwing a npe
-                Assert.notNull(second.right, "unexpected operator at the end");
+                // `x operator y operator` was previously throwing a npe
+                Assert.notNull(second.right, "unexpected trailing operator");
 
                 if (first.mayExecuteFirst()) {
-                    // 2*3+2
+                    // f.e. 2*3+2
                     double leftOperand = first.solve();
                     double secondOperand = second.right.getValue();
                     yield second.operator.apply(leftOperand, secondOperand);
                 }
-                // 2+3*2
+                // f.e. 2+3*2
                 double firstOperand = first.left.getValue();
                 double secondOperand = second.solve();
                 yield first.operator.apply(firstOperand, secondOperand);
@@ -95,7 +95,7 @@ public class TokenList {
     }
 
     /**
-     * Solves a chain of calculations, leaves one calculation behind which can then be solved.
+     * Shortens a chain of calculations, leaves one calculation behind which can then be solved.
      */
     private void shorten() {
         // lets take {2+3}<->{3*4}<->{4+2} as example (expression: 2+3*4+2) and {3*4} as current
@@ -174,7 +174,7 @@ public class TokenList {
         public LinkedCalculation(LinkedCalculation prev, Operator operator) {
             this(prev, prev.right);
             this.operator = operator;
-            // might want to call clone() on prev.right because Operand is mutable
+            // FIXME: might want to call clone() on prev.right because Operand is mutable
             // current solving algorithm doesn't cause any issues with it yet
         }
 
@@ -215,7 +215,7 @@ public class TokenList {
         /**
          * Tries to simplify this calculation, effectively checking if its operator priority is {@link Operator#HIGHEST_PRIORITY}. <br>
          * Then solving the calculation and marking it as "incomplete" again to allow further adding of tokens.
-         * @return true, if this calculation can be simplified, false otherwise
+         * @return true, if this calculation could be simplified, false otherwise
          */
         public boolean simplify() {
             if (operator.getPriority() != Operator.HIGHEST_PRIORITY) {
@@ -244,7 +244,7 @@ public class TokenList {
             if (operator == null) {
                 return left.getValue();
             }
-            Assert.notNull(right, "unexpected operator at the end");
+            Assert.notNull(right, "unexpected trailing operator");
             return solve();
         }
 

@@ -94,7 +94,7 @@ assert result == 4;
 ```
 
 Functions cannot be overloaded, but you can define a function that accepts a variable amount of arguments.  
-PS: don't actually do this, there is already a built-in sum function:
+
 ```java
 /* 
  * This inserts a function called 'add' that returns the sum of all of its arguments.
@@ -110,6 +110,7 @@ ExpressionParser.insertFunction("add", 2, 10, ctx -> {
 double result = ExpressionParser.parse("add(1, 2, 4)");
 assert result == 7;
 ```
+PS: don't actually do this, there is already a built-in sum function.
 
 For more complex functions, take a look at the method that accepts a `Symbol` and pass in a 
 [FunctionCallSite](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).

@@ -41,7 +41,7 @@ public class FunctionContext {
     }
 
     /**
-     * Either eturns an unsigned int or fails.
+     * Either returns an unsigned int or fails.
      * @see #getBoundedInt(int, int, int)
      */
     public int getUnsignedInt(int index, int max) {

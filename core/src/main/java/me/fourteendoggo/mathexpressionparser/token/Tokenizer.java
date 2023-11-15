@@ -136,8 +136,8 @@ public class Tokenizer {
         return advance();
     }
 
-    private char currentOrThrow(String message) {
-        Assert.isTrue(pos < source.length, message);
+    private char currentOrThrow(String fmt, Object... placeholders) {
+        Assert.isTrue(pos < source.length, fmt, placeholders);
         return source[pos];
     }
 
@@ -156,8 +156,8 @@ public class Tokenizer {
         return true;
     }
 
-    private void matchOrThrow(char expected, String message) {
-        Assert.isTrue(match(expected), message);
+    private void matchOrThrow(char expected, String fmt, Object... placeholders) {
+        Assert.isTrue(match(expected), fmt, placeholders);
     }
 
     private Tokenizer branchOff(IntPredicate newLoopCondition, int newPos) {
@@ -257,13 +257,14 @@ public class Tokenizer {
     }
 
     private Operand readFunctionCall(FunctionCallSite function) {
-        matchOrThrow('(', "missing opening parenthesis for function call");
+        String functionName = function.getName();
+        matchOrThrow('(', "missing opening parenthesis for function %s", functionName);
 
         FunctionContext parameters = function.allocateParameters();
-        char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call " + function.getName());
+        char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call ", functionName);
         if (maybeClosingParenthesis != ')') { // arguments were provided
             // TODO: when calling f.e. exit( ), the space gets interpreted as parameters too
-            Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", function.getName());
+            Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", functionName);
 
             // do while doesn't really work here due to that + 1
             Tokenizer paramTokenizer = branchOff(Utility::isValidArgument, pos);
@@ -275,7 +276,7 @@ public class Tokenizer {
             }
             pos = paramTokenizer.pos; // move to ')' (or something else if there's an error)
         }
-        matchOrThrow(')', "missing closing parenthesis for function call " + function.getName());
+        matchOrThrow(')', "missing closing parenthesis for function %s", functionName);
 
         return new Operand(function.apply(parameters));
     }

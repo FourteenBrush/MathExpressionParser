@@ -53,7 +53,7 @@ public class ExecutionEnv {
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public void insertFunction(String name, int numArgs, ToDoubleFunction<FunctionContext> fn) {
-        insertSymbol(new FunctionCallSite(name, numArgs, numArgs, fn));
+        insertFunction(name, numArgs, numArgs, fn);
     }
 
     /**

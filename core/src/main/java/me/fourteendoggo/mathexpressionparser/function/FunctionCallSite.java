@@ -8,7 +8,8 @@ import java.util.function.ToDoubleFunction;
 
 /**
  * A placeholder for an invokable function.
- * @see FunctionContext
+ * Invocation happens via {@link #apply(FunctionContext)}.
+ * @see FunctionContext on how to deal with parameters.
  */
 public class FunctionCallSite implements Symbol {
     private final String name;
