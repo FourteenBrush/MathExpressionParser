@@ -50,6 +50,7 @@ public abstract class BuiltinSymbols {
         // constants
         env.insertSymbol(new Variable("pi", Math.PI));
         env.insertSymbol(new Variable("e", Math.E));
+        env.insertSymbol(new Variable("tau", Math.TAU));
         env.insertSymbol(new Variable("true", 1));
         env.insertSymbol(new Variable("false", 0));
 

@@ -79,7 +79,7 @@ double pi = ExpressionParser.parse("pi");
 assert pi == Math.PI;
 ```
 
-Currently the variables `pi`, `e`, `true` (1) and `false` (0) are built-in.
+Currently, the variables `pi`, `e`, `tau`, `true` (1) and `false` (0) are built-in.
 
 ### Inserting custom functions and variables.
 
