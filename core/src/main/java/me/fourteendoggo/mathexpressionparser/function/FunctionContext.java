@@ -41,6 +41,14 @@ public class FunctionContext {
     }
 
     /**
+     * Either eturns an unsigned int or fails.
+     * @see #getBoundedInt(int, int, int)
+     */
+    public int getUnsignedInt(int index, int max) {
+        return getBoundedInt(index, 0, max);
+    }
+
+    /**
      * Converts a parameter to an integer, ensuring no precision loss occurs and that the value falls within the specified range.
      * @param index the index of the parameter
      * @param min the minimum value that the integer is expected to be
