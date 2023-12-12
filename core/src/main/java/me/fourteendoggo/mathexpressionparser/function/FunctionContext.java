@@ -76,7 +76,7 @@ public class FunctionContext {
         double value = getDouble(index);
         int intValue = (int) value;
         if (intValue != value) {
-            throw new SyntaxException("expected an integer as %s arguments, got %s", Utility.getOrdinalName(index), value);
+            throw new SyntaxException("expected an integer as %s argument, got %s", Utility.getOrdinalName(index), value);
         }
         return intValue;
     }
