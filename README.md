@@ -192,6 +192,7 @@ A list of examples (tests, which should all be working) can be found in the [tes
 - [x] Implementing boolean logic, currently these can be implemented with functions
 - [x] Implementing variables and constants
 - [x] Make it possible to insert variables and functions on a non-global base
+- [ ] Allow numeric values with different bases, e.g. 0x1, 0b2.
 - [ ] Allowing to insert variables through the parser, e.g. "x = sqrt(16)"
 - [ ] Allow multi-line expressions
 
