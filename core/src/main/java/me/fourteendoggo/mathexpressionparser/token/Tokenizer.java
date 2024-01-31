@@ -261,7 +261,7 @@ public class Tokenizer {
         matchOrThrow('(', "missing opening parenthesis for function %s", functionName);
 
         FunctionContext parameters = function.allocateParameters();
-        char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call ", functionName);
+        char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call %s", functionName);
         if (maybeClosingParenthesis != ')') { // arguments were provided
             // TODO: when calling f.e. exit( ), the space gets interpreted as parameters too
             Assert.isTrue(function.supportsArgs(), "did not expect any parameters for function %s", functionName);
