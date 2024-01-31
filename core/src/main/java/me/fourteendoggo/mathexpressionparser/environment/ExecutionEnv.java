@@ -7,6 +7,7 @@ import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import me.fourteendoggo.mathexpressionparser.symbol.BuiltinSymbols;
 import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
 import me.fourteendoggo.mathexpressionparser.symbol.SymbolLookup;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleSupplier;
@@ -77,13 +78,13 @@ public class ExecutionEnv {
     }
 
     /**
-     * INTERNAL USAGE, DO NOT USE <br>
      * Looks up a symbol based on an input
      * @param buf the input as a char array
      * @param pos the position to start searching at
      * @return the found symbol
      * @throws SymbolNotFoundException if no symbol could be found
      */
+    @ApiStatus.Internal
     public Symbol lookupSymbol(char[] buf, int pos) {
         Symbol symbol = symbolLookup.lookup(buf, pos); // already incremented pos
         if (symbol == null) {
