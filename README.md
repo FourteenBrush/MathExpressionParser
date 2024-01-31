@@ -131,7 +131,7 @@ If you want more flexibility over what symbols can be used in what context, you 
 
 ```java
 ExecutionEnv env = new ExecutionEnv();
-// 'today' function is only bound to this environment
+// 'day' function is only bound to this environment
 env.insertFunction("day", () -> {
     DayOfWeek day = LocalDate.now().getDayOfWeek();
     return day.getValue();
@@ -150,7 +150,8 @@ double error = ExpressionParser.parse("day()");
 
 ### Operators
 
-For all logical operators, a 0 means false, whereas everything else is true. To make it more clear, you can use
+> [!NOTE]
+> For all logical operators, a 0 means false, whereas everything else is true. To make it more clear, you can use
 the built-in `true` and `false` variables.
 
 | Operator | Example  | Explanation                                                |
