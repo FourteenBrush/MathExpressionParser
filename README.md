@@ -16,13 +16,13 @@ There is both a Maven and Gradle dependency, which work with JitPack. In order t
 
 ### Maven:
 
-```
+```xml
 <repository>
     <id>jitpack.io</id>
     <url>https://jitpack.io</url>
 </repository>
 ```
-```
+```xml
 <dependency>
     <groupId>com.github.FourteenBrush</groupId>
     <artifactId>MathExpressionParser</artifactId>
@@ -32,12 +32,12 @@ There is both a Maven and Gradle dependency, which work with JitPack. In order t
 
 ### Gradle
 
-```
+```gradle
 repositories {
     maven { url 'https://jitpack.io' }
 }
 ```
-```
+```gradle
 dependencies {
     implementation 'com.github.FourteenBrush:MathExpressionParser:Tag'
 }
