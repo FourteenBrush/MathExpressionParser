@@ -4,10 +4,10 @@ import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
+import me.fourteendoggo.mathexpressionparser.symbol.BuiltinSymbols;
 import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
 import me.fourteendoggo.mathexpressionparser.symbol.Variable;
 import me.fourteendoggo.mathexpressionparser.token.Tokenizer;
-import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 import java.util.Objects;
 import java.util.function.DoubleBinaryOperator;
@@ -15,6 +15,9 @@ import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
 
+/**
+ * Frontend of the expression parser.
+ */
 @SuppressWarnings("unused")
 public class ExpressionParser {
     private static ExecutionEnv DEFAULT_ENV;
@@ -40,7 +43,6 @@ public class ExpressionParser {
     public static double parse(String input, ExecutionEnv env) {
         Objects.requireNonNull(input, "input was null");
         Objects.requireNonNull(env, "environment was null");
-        Assert.isFalse(input.isEmpty(), "cannot solve an empty expression");
 
         Tokenizer tokenizer = new Tokenizer(input.toCharArray(), env);
         return tokenizer.readTokens().solve();
@@ -85,7 +87,7 @@ public class ExpressionParser {
 
     /**
      * Inserts a symbol into the default execution environment.
-     * @param symbol the symbol to insert, can be either a variable or a function
+     * @param symbol the symbol to insert.
      * @see FunctionCallSite
      * @see Variable
      */
@@ -94,8 +96,9 @@ public class ExpressionParser {
     }
 
     private static ExecutionEnv getDefaultEnv() {
+        // FIXME: store DEFAULT_ENV in an unloaded inner class?
         if (DEFAULT_ENV == null) {
-            DEFAULT_ENV = new ExecutionEnv();
+            DEFAULT_ENV = BuiltinSymbols.createExecutionEnv();
         }
         return DEFAULT_ENV;
     }
