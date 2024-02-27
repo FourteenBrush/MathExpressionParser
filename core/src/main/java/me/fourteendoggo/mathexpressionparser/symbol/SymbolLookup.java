@@ -3,7 +3,6 @@ package me.fourteendoggo.mathexpressionparser.symbol;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
-import java.util.function.IntPredicate;
 import java.util.function.Supplier;
 
 // TODO: allow more different chars as symbol name
@@ -12,14 +11,8 @@ import java.util.function.Supplier;
  * An efficient lookup tree for {@link Symbol}s.
  */
 public class SymbolLookup {
-    private static final int CHILDREN_WIDTH = 26;
-    private final IntPredicate characterValidator;
-    private final Node root;
-
-    public SymbolLookup() {
-        characterValidator = Utility::isLowercaseLetter;
-        root = new Node(' ');
-    }
+    private static final int CHILDREN_WIDTH = 'z' - 'a' + 1;
+    private final Node root = new Node(' ');
 
     public void insert(Symbol symbol) {
         Node node = root;
@@ -44,7 +37,7 @@ public class SymbolLookup {
     public Symbol lookup(char[] buf, int pos) {
         Node node = root;
         char current;
-        while (pos < buf.length && characterValidator.test(current = buf[pos++])) {
+        while (pos < buf.length && Utility.isLowercaseLetter(current = buf[pos++])) {
             node = node.children[current - 'a'];
             if (node == null) return null;
         }
@@ -59,13 +52,12 @@ public class SymbolLookup {
         return "SymbolLookup{root=" + root + '}';
     }
 
-    private class Node {
+    private static class Node {
         private final char value; // for debugging only
-        private final Node[] children;
+        private final Node[] children = new Node[CHILDREN_WIDTH];
 
         public Node(char value) {
             this.value = value;
-            this.children = new Node[CHILDREN_WIDTH];
         }
 
         public Node computeChildIfAbsent(char value, Supplier<Node> supplier) {
@@ -83,8 +75,8 @@ public class SymbolLookup {
             return oldValue;
         }
 
-        private int indexOrThrow(char value) {
-            Assert.isTrue(characterValidator.test(value), "character %s is not allowed to be used", value);
+        private static int indexOrThrow(char value) {
+            Assert.isTrue(Utility.isLowercaseLetter(value), "character %s is not allowed to be used", value);
             return value - 'a';
         }
 
@@ -113,7 +105,7 @@ public class SymbolLookup {
     /**
      * A node that holds a {@link Symbol}, this node can still have child nodes.
      */
-    private class ValueHoldingNode extends Node {
+    private static class ValueHoldingNode extends Node {
         private final Symbol symbol;
 
         public ValueHoldingNode(char value, Symbol symbol) {
