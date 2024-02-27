@@ -14,12 +14,21 @@ import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
 
+// TODO: add support for removing/ inserting if absent
+
+/**
+ * An environment instance, to which symbols can be bound.
+ * When using this environment as a lookup for the parser,
+ * only symbols found in this environment will be seen.
+ */
 public class ExecutionEnv {
     private final SymbolLookup symbolLookup;
 
+    /**
+     * Creates an empty {@link ExecutionEnv}, no symbols are bound.
+     */
     public ExecutionEnv() {
         symbolLookup = new SymbolLookup();
-        BuiltinSymbols.init(this);
     }
 
     /**
@@ -89,6 +98,7 @@ public class ExecutionEnv {
         Symbol symbol = symbolLookup.lookup(buf, pos); // already incremented pos
         if (symbol == null) {
             String bufAsStr = new String(buf, pos, buf.length - pos);
+            // TODO: also change when valid chars for symbol name change
             String symbolName = bufAsStr.split("[^a-zA-Z]")[0];
             throw new SymbolNotFoundException(symbolName);
         }

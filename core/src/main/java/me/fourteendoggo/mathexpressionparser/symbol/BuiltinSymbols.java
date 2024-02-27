@@ -3,17 +3,22 @@ package me.fourteendoggo.mathexpressionparser.symbol;
 import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.SplittableRandom;
 
+/**
+ * A utility class used to create an {@link ExecutionEnv}, filled with all default functions.
+ */
 public abstract class BuiltinSymbols {
-    private static final SplittableRandom RANDOM = new SplittableRandom();
 
     /**
-     * Initializes the given {@link ExecutionEnv} with all the standard functions and variables
-     * @param env the environment
+     * @return an {@link ExecutionEnv}, filled with all default functions.
      */
-    public static void init(ExecutionEnv env) {
+    public static ExecutionEnv createExecutionEnv() {
+        SplittableRandom capturedRandom = new SplittableRandom();
+        ExecutionEnv env = new ExecutionEnv();
+
         // trigonometric
         env.insertFunction("sin", Math::sin);
         env.insertFunction("cos", Math::cos);
@@ -46,7 +51,7 @@ public abstract class BuiltinSymbols {
         // maybe to transform a double to either 1 or 0
         env.insertFunction("bool", d -> d == 0 ? 0 : 1);
         // time-related
-        env.insertFunction("now", () -> (double) System.currentTimeMillis()); // a long, hmm ye...
+        env.insertFunction("now", () -> (double) System.currentTimeMillis()); //
         // constants
         env.insertSymbol(new Variable("pi", Math.PI));
         env.insertSymbol(new Variable("e", Math.E));
@@ -96,9 +101,9 @@ public abstract class BuiltinSymbols {
         env.insertFunction("rand", 0, 2, ctx -> {
             try {
                 return switch (ctx.size()) {
-                    case 0 -> RANDOM.nextDouble();
-                    case 1 -> RANDOM.nextDouble(ctx.getDouble(0));
-                    default -> RANDOM.nextDouble(ctx.getDouble(0), ctx.getDouble(1));
+                    case 0 -> capturedRandom.nextDouble();
+                    case 1 -> capturedRandom.nextDouble(ctx.getDouble(0));
+                    default -> capturedRandom.nextDouble(ctx.getDouble(0), ctx.getDouble(1));
                 };
             } catch (IllegalArgumentException e) {
                 // random throws this when f.e. the bound > the origin, translate this into a SyntaxException
@@ -115,5 +120,18 @@ public abstract class BuiltinSymbols {
             int b = ctx.getInt(1);
             return Utility.lcm(a, b);
         });
+
+        return env;
+    }
+
+    // TODO: remove
+    /**
+     * Initializes the given {@link ExecutionEnv} with all the standard functions and variables
+     * @param env the environment
+     */
+    @ApiStatus.Internal
+    @Deprecated(forRemoval = true)
+    public static void init(ExecutionEnv env) {
+        throw new UnsupportedOperationException("semantics moved to BuiltinSymbols.createExecutionEnv()");
     }
 }
