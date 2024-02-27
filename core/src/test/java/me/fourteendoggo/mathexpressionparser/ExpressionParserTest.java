@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ExpressionParserTest {
@@ -15,94 +16,94 @@ class ExpressionParserTest {
         double expected = ExpressionParser.parse(expectedResult);
         double result = assertDoesNotThrow(() -> ExpressionParser.parse(expression));
         // delta 0 to make 0.0 == -0.0 pass, junit uses Double.doubleToLongBits for comparison
-        assertEquals(expected, result, 0, () -> "Got %f instead of %f".formatted(result, expected));
+        assertThat(result).withFailMessage("Got %f instead of %f", result, expected).isEqualTo(expected);
     }
 
     @ParameterizedTest
     @CsvFileSource(resources = "/negative-input.csv")
     void testNegativeTestCases(String expression) {
-        assertThrows(SyntaxException.class, () -> ExpressionParser.parse(expression));
+        assertThatCode(() -> ExpressionParser.parse(expression)).isInstanceOf(SyntaxException.class);
     }
 
     @Test
     void testThrowingExpressions() {
-        assertThrows(NullPointerException.class, () -> ExpressionParser.parse(null));
-        assertThrows(SyntaxException.class, () -> ExpressionParser.parse(""));
+        assertThatThrownBy(() -> ExpressionParser.parse(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ExpressionParser.parse("")).isInstanceOf(SyntaxException.class);
     }
 
     @Test
     void testBooleanTruthTables() {
         // AND
-        assertEquals(0, ExpressionParser.parse("and(0, 0)"));
-        assertEquals(0, ExpressionParser.parse("and(0, 1)"));
-        assertEquals(0, ExpressionParser.parse("and(1, 0)"));
-        assertEquals(1, ExpressionParser.parse("and(1, 1)"));
+        assertThat(ExpressionParser.parse("and(0, 0)")).isZero();
+        assertThat(ExpressionParser.parse("and(0, 1)")).isZero();
+        assertThat(ExpressionParser.parse("and(1, 0)")).isZero();
+        assertThat(ExpressionParser.parse("and(1, 1)")).isOne();
 
-        assertEquals(0, ExpressionParser.parse("0 && 0"));
-        assertEquals(0, ExpressionParser.parse("0 && 1"));
-        assertEquals(0, ExpressionParser.parse("1 && 0"));
-        assertEquals(1, ExpressionParser.parse("1 && 1"));
+        assertThat(ExpressionParser.parse("0 && 0")).isZero();
+        assertThat(ExpressionParser.parse("0 && 1")).isZero();
+        assertThat(ExpressionParser.parse("1 && 0")).isZero();
+        assertThat(ExpressionParser.parse("1 && 1")).isOne();
         // NAND
-        assertEquals(1, ExpressionParser.parse("nand(0, 0)"));
-        assertEquals(1, ExpressionParser.parse("nand(0, 1)"));
-        assertEquals(1, ExpressionParser.parse("nand(1, 0)"));
-        assertEquals(0, ExpressionParser.parse("nand(1, 1)"));
+        assertThat(ExpressionParser.parse("nand(0, 0)")).isOne();
+        assertThat(ExpressionParser.parse("nand(0, 1)")).isOne();
+        assertThat(ExpressionParser.parse("nand(1, 0)")).isOne();
+        assertThat(ExpressionParser.parse("nand(1, 1)")).isZero();
 
-        assertEquals(1, ExpressionParser.parse("!(0 && 0)"));
-        assertEquals(1, ExpressionParser.parse("!(0 && 1)"));
-        assertEquals(1, ExpressionParser.parse("!(1 && 0)"));
-        assertEquals(0, ExpressionParser.parse("!(1 && 1)"));
+        assertThat(ExpressionParser.parse("!(0 && 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(0 && 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(0 && 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(0 && 0)")).isOne();
+
+        assertThat(ExpressionParser.parse("!(0 && 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(0 && 1)")).isOne();
+        assertThat(ExpressionParser.parse("!(1 && 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(1 && 1)")).isZero();
         // OR
-        assertEquals(0, ExpressionParser.parse("or(0, 0)"));
-        assertEquals(1, ExpressionParser.parse("or(0, 1)"));
-        assertEquals(1, ExpressionParser.parse("or(1, 0)"));
-        assertEquals(1, ExpressionParser.parse("or(1, 1)"));
-
-        assertEquals(0, ExpressionParser.parse("0 || 0"));
-        assertEquals(1, ExpressionParser.parse("0 || 1"));
-        assertEquals(1, ExpressionParser.parse("1 || 0"));
-        assertEquals(1, ExpressionParser.parse("1 || 1"));
+        assertThat(ExpressionParser.parse("0 || 0")).isZero();
+        assertThat(ExpressionParser.parse("0 || 1")).isOne();
+        assertThat(ExpressionParser.parse("1 || 0")).isOne();
+        assertThat(ExpressionParser.parse("1 || 1")).isOne();
         // XOR
-        assertEquals(0, ExpressionParser.parse("xor(0, 0)"));
-        assertEquals(1, ExpressionParser.parse("xor(0, 1)"));
-        assertEquals(1, ExpressionParser.parse("xor(1, 0)"));
-        assertEquals(0, ExpressionParser.parse("xor(1, 1)"));
+        assertThat(ExpressionParser.parse("xor(0, 0)")).isZero();
+        assertThat(ExpressionParser.parse("xor(0, 1)")).isOne();
+        assertThat(ExpressionParser.parse("xor(1, 0)")).isOne();
+        assertThat(ExpressionParser.parse("xor(1, 1)")).isZero();
 
-        assertEquals(0, ExpressionParser.parse("0 ^ 0"));
-        assertEquals(1, ExpressionParser.parse("0 ^ 1"));
-        assertEquals(1, ExpressionParser.parse("1 ^ 0"));
-        assertEquals(0, ExpressionParser.parse("1 ^ 1"));
+        assertThat(ExpressionParser.parse("0 ^ 0")).isZero();
+        assertThat(ExpressionParser.parse("0 ^ 1")).isOne();
+        assertThat(ExpressionParser.parse("1 ^ 0")).isOne();
+        assertThat(ExpressionParser.parse("1 ^ 1")).isZero();
         // NOT
-        assertEquals(1, ExpressionParser.parse("not(0)"));
-        assertEquals(0, ExpressionParser.parse("not(1)"));
+        assertThat(ExpressionParser.parse("not(0)")).isOne();
+        assertThat(ExpressionParser.parse("not(1)")).isZero();
 
-        assertEquals(1, ExpressionParser.parse("!0"));
-        assertEquals(0, ExpressionParser.parse("!1"));
+        assertThat(ExpressionParser.parse("!0")).isOne();
+        assertThat(ExpressionParser.parse("!1")).isZero();
         // NOR
-        assertEquals(1, ExpressionParser.parse("nor(0, 0)"));
-        assertEquals(0, ExpressionParser.parse("nor(0, 1)"));
-        assertEquals(0, ExpressionParser.parse("nor(1, 0)"));
-        assertEquals(0, ExpressionParser.parse("nor(1, 1)"));
+        assertThat(ExpressionParser.parse("nor(0, 0)")).isOne();
+        assertThat(ExpressionParser.parse("nor(0, 1)")).isZero();
+        assertThat(ExpressionParser.parse("nor(1, 0)")).isZero();
+        assertThat(ExpressionParser.parse("nor(1, 1)")).isZero();
 
-        assertEquals(1, ExpressionParser.parse("!(0 || 0)"));
-        assertEquals(0, ExpressionParser.parse("!(0 || 1)"));
-        assertEquals(0, ExpressionParser.parse("!(1 || 0)"));
-        assertEquals(0, ExpressionParser.parse("!(1 || 1)"));
+        assertThat(ExpressionParser.parse("!(0 || 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(0 || 1)")).isZero();
+        assertThat(ExpressionParser.parse("!(1 || 0)")).isZero();
+        assertThat(ExpressionParser.parse("!(1 || 1)")).isZero();
         // XNOR
-        assertEquals(1, ExpressionParser.parse("xnor(0, 0)"));
-        assertEquals(0, ExpressionParser.parse("xnor(0, 1)"));
-        assertEquals(0, ExpressionParser.parse("xnor(1, 0)"));
-        assertEquals(1, ExpressionParser.parse("xnor(1, 1)"));
+        assertThat(ExpressionParser.parse("xnor(0, 0)")).isOne();
+        assertThat(ExpressionParser.parse("xnor(0, 1)")).isZero();
+        assertThat(ExpressionParser.parse("xnor(1, 0)")).isZero();
+        assertThat(ExpressionParser.parse("xnor(1, 1)")).isOne();
 
-        assertEquals(1, ExpressionParser.parse("!(0 ^ 0)"));
-        assertEquals(0, ExpressionParser.parse("!(0 ^ 1)"));
-        assertEquals(0, ExpressionParser.parse("!(1 ^ 0)"));
-        assertEquals(1, ExpressionParser.parse("!(1 ^ 1)"));
+        assertThat(ExpressionParser.parse("!(0 ^ 0)")).isOne();
+        assertThat(ExpressionParser.parse("!(0 ^ 1)")).isZero();
+        assertThat(ExpressionParser.parse("!(1 ^ 0)")).isZero();
+        assertThat(ExpressionParser.parse("!(1 ^ 1)")).isOne();
         // bool()
-        assertEquals(0, ExpressionParser.parse("bool(0.0)"));
-        assertEquals(1, ExpressionParser.parse("bool(1.34)"));
-        assertEquals(1, ExpressionParser.parse("bool(-12.333 / 2.3)"));
-        assertEquals(0, ExpressionParser.parse("bool(1 - 1)"));
+        assertThat(ExpressionParser.parse("bool(0.0)")).isZero();
+        assertThat(ExpressionParser.parse("bool(1.34)")).isOne();
+        assertThat(ExpressionParser.parse("bool(-12.333 / 2.3)")).isOne();
+        assertThat(ExpressionParser.parse("bool(1 - 1)")).isZero();
     }
 
     @Test
@@ -122,87 +123,86 @@ class ExpressionParserTest {
 
     @Test
     void testOtherMultipleCharOperators() {
-        assertEquals(1, ExpressionParser.parse("1<= 2.0"));
-        assertEquals(1, ExpressionParser.parse("1 <= 2"));
-        assertEquals(1, ExpressionParser.parse("1<=2"));
-        assertEquals(1, ExpressionParser.parse("1 <=2"));
-        assertEquals(1, ExpressionParser.parse("1<=  2"));
-        assertEquals(1, ExpressionParser.parse("1 <=    2"));
-        assertEquals(0, ExpressionParser.parse("8 <=5.22"));
-        assertEquals(0, ExpressionParser.parse("8.111134<=3"));
+        assertThat(ExpressionParser.parse("1<= 2.0")).isOne();
+        assertThat(ExpressionParser.parse("1 <= 2")).isOne();
+        assertThat(ExpressionParser.parse("1<=2")).isOne();
+        assertThat(ExpressionParser.parse("1 <=2")).isOne();
+        assertThat(ExpressionParser.parse("1<=  2")).isOne();
+        assertThat(ExpressionParser.parse("1 <=    2")).isOne();
+        assertThat(ExpressionParser.parse("8 <=5.22")).isZero();
+        assertThat(ExpressionParser.parse("8.111134<=3")).isZero();
 
-        assertEquals(1, ExpressionParser.parse("3>= 1"));
-        assertEquals(1, ExpressionParser.parse("3>= 1"));
-        assertEquals(1, ExpressionParser.parse("3 >= 1"));
-        assertEquals(1, ExpressionParser.parse("3  >= 1.18"));
-        assertEquals(1, ExpressionParser.parse("3.12  >= 1.18"));
-        assertEquals(1, ExpressionParser.parse("1 >=0.0"));
-        assertEquals(1, ExpressionParser.parse("1>=-9.11900"));
-        assertEquals(1, ExpressionParser.parse("-0.8 >= -9.11900"));
+        assertThat(ExpressionParser.parse("3>= 1")).isOne();
+        assertThat(ExpressionParser.parse("3>= 1")).isOne();
+        assertThat(ExpressionParser.parse("3 >= 1")).isOne();
+        assertThat(ExpressionParser.parse("3  >= 1.18")).isOne();
+        assertThat(ExpressionParser.parse("3.12  >= 1.18")).isOne();
+        assertThat(ExpressionParser.parse("1 >=0.0")).isOne();
+        assertThat(ExpressionParser.parse("1>=-9.11900")).isOne();
+        assertThat(ExpressionParser.parse("-0.8 >= -9.11900")).isOne();
 
-        assertEquals(1, ExpressionParser.parse("3> 1.2"));
-        assertEquals(1, ExpressionParser.parse("16/ 2.0 < 999999"));
-        assertEquals(1, ExpressionParser.parse("3 < 10"));
-        assertEquals(1, ExpressionParser.parse("19> 2.00001"));
-        assertEquals(1, ExpressionParser.parse("16 > pow(1, 111)"));
-        assertEquals(1, ExpressionParser.parse("18/ 2>1.00"));
-        assertEquals(1, ExpressionParser.parse("1>-9.11900"));
-        assertEquals(1, ExpressionParser.parse("-0.8 > -9.11900"));
+        assertThat(ExpressionParser.parse("3> 1.2")).isOne();
+        assertThat(ExpressionParser.parse("16/ 2.0 < 999999")).isOne();
+        assertThat(ExpressionParser.parse("3 < 10")).isOne();
+        assertThat(ExpressionParser.parse("19> 2.00001")).isOne();
+        assertThat(ExpressionParser.parse("16 > pow(1, 111)")).isOne();
+        assertThat(ExpressionParser.parse("18/ 2>1.00")).isOne();
+        assertThat(ExpressionParser.parse("1>-9.11900")).isOne();
+        assertThat(ExpressionParser.parse("-0.8 > -9.11900")).isOne();
 
-        assertEquals(4, ExpressionParser.parse("2 << 1"));
-        assertEquals(4, ExpressionParser.parse("2<< 1"));
-        assertEquals(4, ExpressionParser.parse("2<<1"));
-        assertEquals(4, ExpressionParser.parse("2<< 1"));
-        assertEquals(16, ExpressionParser.parse("2  <<    3"));
+        assertThat(ExpressionParser.parse("2 << 1")).isEqualTo(4);
+        assertThat(ExpressionParser.parse("2<< 1")).isEqualTo(4);
+        assertThat(ExpressionParser.parse("2<<1")).isEqualTo(4);
+        assertThat(ExpressionParser.parse("2<< 1")).isEqualTo(4);
+        assertThat(ExpressionParser.parse("2  <<    3")).isEqualTo(16);
 
-        assertEquals(1, ExpressionParser.parse("2 >> 1"));
-        assertEquals(4, ExpressionParser.parse("16>>2"));
-        assertEquals(4, ExpressionParser.parse("32>> 3"));
-        assertEquals(16, ExpressionParser.parse("64  >>    2"));
+        assertThat(ExpressionParser.parse("2 >> 1")).isEqualTo(1);
+        assertThat(ExpressionParser.parse("16>>2")).isEqualTo(4);
+        assertThat(ExpressionParser.parse("32>> 3")).isEqualTo(4);
+        assertThat(ExpressionParser.parse("64  >>    2")).isEqualTo(16);
 
-        assertEquals(0, ExpressionParser.parse("1== 2"));
-        assertEquals(0, ExpressionParser.parse("1 == 2"));
-        assertEquals(0, ExpressionParser.parse("1==2"));
-        assertEquals(0, ExpressionParser.parse("1 ==2"));
-        assertEquals(0, ExpressionParser.parse("1==  2"));
-        assertEquals(0, ExpressionParser.parse("1 ==    2"));
-        assertEquals(0, ExpressionParser.parse("8 ==5.22"));
-        assertEquals(0, ExpressionParser.parse("8.111134==3"));
+        assertThat(ExpressionParser.parse("1== 2")).isZero();
+        assertThat(ExpressionParser.parse("1 == 2")).isZero();
+        assertThat(ExpressionParser.parse("1==2")).isZero();
+        assertThat(ExpressionParser.parse("1 ==2")).isZero();
+        assertThat(ExpressionParser.parse("1==  2")).isZero();
+        assertThat(ExpressionParser.parse("1 ==    2")).isZero();
+        assertThat(ExpressionParser.parse("8 ==5.22")).isZero();
+        assertThat(ExpressionParser.parse("8.111134==3")).isZero();
 
-        assertEquals(1, ExpressionParser.parse("1!= 23300"));
-        assertEquals(1, ExpressionParser.parse("1 != 2"));
-        assertEquals(1, ExpressionParser.parse("1!=2"));
-        assertEquals(1, ExpressionParser.parse("1 !=2"));
-        assertEquals(1, ExpressionParser.parse("1!=  2.4"));
-        assertEquals(1, ExpressionParser.parse("1.44 !=    2"));
-        assertEquals(1, ExpressionParser.parse("8 !=5.22"));
-        assertEquals(1, ExpressionParser.parse("8.111134!=3"));
+        assertThat(ExpressionParser.parse("1!= 23300")).isOne();
+        assertThat(ExpressionParser.parse("1 != 2")).isOne();
+        assertThat(ExpressionParser.parse("1!=2")).isOne();
+        assertThat(ExpressionParser.parse("1 !=2")).isOne();
+        assertThat(ExpressionParser.parse("1!=  2.4")).isOne();
+        assertThat(ExpressionParser.parse("1.44 !=    2")).isOne();
+        assertThat(ExpressionParser.parse("8 !=5.22")).isOne();
+        assertThat(ExpressionParser.parse("8.111134!=3")).isOne();
 
-        assertEquals(1, ExpressionParser.parse("1&& 23300.0"));
-        assertEquals(1, ExpressionParser.parse("1 && 2"));
-        assertEquals(0, ExpressionParser.parse("0&&0.00"));
-        assertEquals(1, ExpressionParser.parse("1 &&2"));
-        assertEquals(1, ExpressionParser.parse("1.0&&  2.4"));
-        assertEquals(0, ExpressionParser.parse("0.00 &&    2"));
-        assertEquals(1, ExpressionParser.parse("8 &&5.22"));
-        assertEquals(1, ExpressionParser.parse("8.111134&&3"));
+        assertThat(ExpressionParser.parse("1&& 23300.0")).isOne();
+        assertThat(ExpressionParser.parse("1 && 2")).isOne();
+        assertThat(ExpressionParser.parse("0&&0.00")).isZero();
+        assertThat(ExpressionParser.parse("1 &&2")).isOne();
+        assertThat(ExpressionParser.parse("1.0&&  2.4")).isOne();
+        assertThat(ExpressionParser.parse("0.00 &&    2")).isZero();
+        assertThat(ExpressionParser.parse("8 &&5.22")).isOne();
+        assertThat(ExpressionParser.parse("8.111134&&3")).isOne();
 
-        assertEquals(1, ExpressionParser.parse("1|| 23300.0"));
-        assertEquals(1, ExpressionParser.parse("1 || 2"));
-        assertEquals(0, ExpressionParser.parse("0||0.00"));
-        assertEquals(1, ExpressionParser.parse("0 ||2"));
-        assertEquals(1, ExpressionParser.parse("1.0||  2.4"));
-        assertEquals(0, ExpressionParser.parse("0.00 ||    0"));
-        assertEquals(1, ExpressionParser.parse("8 ||5.22"));
-        assertEquals(1, ExpressionParser.parse("8.111134||3"));
+        assertThat(ExpressionParser.parse("1|| 23300.0")).isOne();
+        assertThat(ExpressionParser.parse("1 || 2")).isOne();
+        assertThat(ExpressionParser.parse("0||0.00")).isZero();
+        assertThat(ExpressionParser.parse("0 ||2")).isOne();
+        assertThat(ExpressionParser.parse("1.0||  2.4")).isOne();
+        assertThat(ExpressionParser.parse("0.00 ||    0")).isZero();
+        assertThat(ExpressionParser.parse("8 ||5.22")).isOne();
+        assertThat(ExpressionParser.parse("8.111134||3")).isOne();
     }
 
     @Test
     void testOperatorsCombinedWithFunction() {
-        assertDoesNotThrow(() -> {
-            double result = ExpressionParser.parse("max(-min(1, 3), 5)");
-            assertEquals(5, result);
-        });
-
+        assertThatCode(() -> {
+            double res = ExpressionParser.parse("max(-min(1, 3), 5)");
+            assertThat(res).isEqualTo(5);
+        }).doesNotThrowAnyException();
     }
 }

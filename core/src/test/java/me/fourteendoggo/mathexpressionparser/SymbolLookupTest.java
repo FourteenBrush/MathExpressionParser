@@ -21,10 +21,10 @@ class SymbolLookupTest {
 
     @Test
     void testVariableLookup() {
-        Symbol bTrue = new Variable("t", 1);
+        Symbol boolTrue = new Variable("t", 1);
         char[] buf = "t + 1".toCharArray();
-        lookup.insert(bTrue);
-        assertEquals(bTrue, lookup.lookup(buf, 0));
+        lookup.insert(boolTrue);
+        assertEquals(boolTrue, lookup.lookup(buf, 0));
     }
 
     @Test
