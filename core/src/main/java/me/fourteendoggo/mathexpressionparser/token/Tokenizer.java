@@ -15,7 +15,7 @@ import java.util.function.IntPredicate;
 public class Tokenizer {
     private final char[] source;
     private final ExecutionEnv env;
-    private final TokenList tokens;
+    private final Expression tokens;
     private final IntPredicate loopCondition;
     private int pos;
 
@@ -27,10 +27,10 @@ public class Tokenizer {
         this.source = source;
         this.env = env;
         this.loopCondition = loopCondition;
-        this.tokens = new TokenList();
+        this.tokens = new Expression();
     }
 
-    public TokenList readTokens() {
+    public Expression readTokens() {
         while (hasRemaining()) {
             char current = advance();
             switch (current) {

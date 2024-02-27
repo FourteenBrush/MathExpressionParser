@@ -4,10 +4,10 @@ import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 
 /**
- * Represents a parsed expression in a solvable form. <br>
- * @see TokenList#solve()
+ * Represents a solvable expression being constructed.
+ * @see Expression#solve()
  */
-public class TokenList {
+public class Expression {
     private LinkedCalculation head, tail;
     private TokenType lastType = TokenType.OPERATOR; // need to assure incoming type is different from the current one
     private int numCalculations;
@@ -163,8 +163,8 @@ public class TokenList {
     /**
      * A linked list of calculations, dynamically constructed as tokens are added.<br/>
      * Tokens are added linearly, so the list is always in the order of the input.<br/>
-     * Each calculation added to the {@link TokenList} is supposed to have valid tokens,
-     * only {@link TokenList#tail} may be incomplete, meaning it is still being constructed
+     * Each calculation added to the {@link Expression} is supposed to have valid tokens,
+     * only {@link Expression#tail} may be incomplete, meaning it is still being constructed
      */
     private static class LinkedCalculation {
         private LinkedCalculation prev, next;
