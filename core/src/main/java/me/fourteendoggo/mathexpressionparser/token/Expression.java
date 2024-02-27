@@ -16,16 +16,18 @@ public class Expression {
         checkType(token.getType());
         lastType = token.getType();
 
-        if (tail != null) {
-            if (tail.isComplete() && !tail.simplify()) {
-                tail.next = new LinkedCalculation(tail, (Operator) token);
-                tail = tail.next;
-                numCalculations++;
-            }
+        if (tail == null) {
+            head = tail = new LinkedCalculation((Operand) token);
+            numCalculations++;
+            return;
+        }
+
+        // if we could not reuse the last operand of tail, allocate a new tail
+        if (!tail.isComplete() || tail.simplify()) {
             tail.pushToken(token);
         } else {
-            tail = new LinkedCalculation((Operand) token);
-            head = tail;
+            tail.next = new LinkedCalculation(tail, tail.right, (Operator) token);
+            tail = tail.next;
             numCalculations++;
         }
     }
@@ -172,16 +174,10 @@ public class Expression {
         private Operand right;
         private Operator operator;
 
-        public LinkedCalculation(LinkedCalculation prev, Operator operator) {
-            this(prev, prev.right);
-            this.operator = operator;
-            // FIXME: might want to call clone() on prev.right because Operand is mutable
-            // current solving algorithm doesn't cause any issues with it yet
-        }
-
-        public LinkedCalculation(LinkedCalculation prev, Operand left) {
-            this(left);
+        public LinkedCalculation(LinkedCalculation prev, Operand left, Operator operator) {
             this.prev = prev;
+            this.left = left;
+            this.operator = operator;
         }
 
         public LinkedCalculation(Operand left) {
@@ -241,7 +237,7 @@ public class Expression {
          * @throws SyntaxException if we hold both a left operand and an operator (how even would we solve that?)
          */
         public double tryToSolve() {
-            // illegal state of having a left operand and right operand but no operator should never occur
+            // illegal state of having a left operand and right operand but no operator can never occur
             if (operator == null) {
                 return left.getValue();
             }
