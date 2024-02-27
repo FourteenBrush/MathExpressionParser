@@ -41,6 +41,13 @@ public class FunctionContext {
     }
 
     /**
+     * @see #getUnsignedInt(int, int)
+     */
+    public int getUnsignedInt(int index) {
+        return getUnsignedInt(index, Integer.MAX_VALUE);
+    }
+
+    /**
      * Either returns an unsigned int or fails.
      * @see #getBoundedInt(int, int, int)
      */
@@ -82,6 +89,21 @@ public class FunctionContext {
     }
 
     /**
+     * @see #getUnsignedDouble(int, double)
+     */
+    public double getUnsignedDouble(int index) {
+        return getBoundedDouble(index, 0, Double.MAX_VALUE);
+    }
+
+    /**
+     * Either returns an unsigned double or fails.
+     * @see #getBoundedDouble(int, double, double)
+     */
+    public double getUnsignedDouble(int index, double max) {
+        return getBoundedDouble(index, 0, max);
+    }
+
+    /**
      * Returns a parameter, ensuring that it falls within the specified range.
      * @param index the index of the parameter
      * @param min the minimum value that the parameter is expected to be
@@ -104,7 +126,7 @@ public class FunctionContext {
     public double getDouble(int index) {
         Assert.indexWithinBounds(
                 index, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
-                index, size, size - 1
+                index, size
         );
         return parameters[index];
     }
