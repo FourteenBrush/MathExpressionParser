@@ -8,6 +8,7 @@ import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
 import me.fourteendoggo.mathexpressionparser.symbol.Variable;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.IntPredicate;
 
@@ -178,7 +179,8 @@ public class Tokenizer {
 
     /**
      * Reads a double starting at the current pos
-     * @param initialChar the first char of the number, or '0' if this was a negative number
+     * @param initialChar the first char of the number, or '0' if this was a negative number.
+     *                    If this was a negative number, {@code readNumber} is also set to false.
      * @param readNumber whether the initialChar was actually part of the number, false if it accounts for a negative sign
      * @return the read double
      * @throws SyntaxException if the buffer contains some malformed double
@@ -215,6 +217,84 @@ public class Tokenizer {
         return result;
     }
 
+    // TODO: fully implement
+    /**
+     * Reads a double from the input buffer.
+     * @param initialChar the first char of the number, or '0' if this was a negative number.
+     * @param negative false to indicate that the initialChar was actually a negative sign.
+     * @return the read double
+     * @throws SyntaxException if the buffer contains some malformed double
+     * <p>
+     * Examples:
+     * <p>
+     * <ul>
+     *     <li>"0" -> readDouble('0', true)</li>
+     *     <li>"-0" -> readDouble('0', false)</li>
+     *     <li>"123" -> readDouble('1', true)</li>
+     * </ul>
+     */
+    @ApiStatus.Experimental
+    private double readDoubleExperimental(char initialChar, boolean negative) {
+        // potentialBase becomes true if we have read 0 or -0
+        // [-]0<potential base>
+        boolean potentialBase = (negative && initialChar == '0') || match('0');
+
+        int base = potentialBase ? switch (currentOrDefault()) {
+            case 'b', 'B' -> { pos++; yield 2; }
+            case 'o', 'O' -> { pos++; yield 8; }
+            case 'x', 'X' -> { pos++; yield 16; }
+            // NOTE: this is basically a catch for '\0', we wouldn't be here
+            // if currentOrDefault() was anything else
+            // TODO: can't we return 0 immediately here, instead of an extra branch?
+            default -> 0; // -0 or 0, end of input
+        } : 10;
+
+        System.out.println("initial: " + initialChar);
+        System.out.println("negative: " + negative);
+        System.out.println("standing on " + currentOrDefault());
+        System.out.println("base: " + base);
+
+        if (base == 0) return 0; // -0 or 0, end of input
+
+        // if we have read a base, then expect a number
+        double result = initialChar - '0';
+
+        loop:
+        while (pos < source.length) {
+            char current = advance();
+            switch (current) {
+                // still waiting for range syntax in java
+                case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                     'a', 'b', 'c', 'd', 'e', 'f',
+                     'A', 'B', 'C', 'D', 'E', 'F' -> {
+                    // NOTE: a letter could also mean a function name is following
+                    // TODO: lets imagine 0xfunction(), how can we know where the func name starts?
+                    if (!isValidCharForBase(current, base)) {
+                        current |= ' '; // set lowercase bit
+                        if (current >= 'a' && current <= 'z') {
+                            // assume a function follows
+                            pos--; // put the letter back
+                            break loop;
+                        }
+                    }
+                }
+            }
+            System.out.print(current);
+        }
+        System.out.println();
+        return result;
+    }
+
+    private static boolean isValidCharForBase(char c, int base) {
+        return switch (base) {
+            case 2 -> c == '0' || c == '1';
+            case 8 -> c >= '0' && c <= '7';
+            case 10 -> c >= '0' && c <= '9';
+            case 16 -> (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+            default -> false;
+        };
+    }
+
     private double readDecimalPart() {
         int oldPos = pos;
         double result = 0;
@@ -249,7 +329,7 @@ public class Tokenizer {
         Symbol symbol = env.lookupSymbol(source, pos - 1); // already incremented pos
         pos += symbol.getName().length() - 1;
 
-        // TODO: change this to java 19 switch, want to keep the project on java 17 for now
+        // TODO: change this to switch (symbol), whatever language version that may be
         return switch (symbol.getType()) {
             case FUNCTION -> readFunctionCall((FunctionCallSite) symbol);
             case VARIABLE -> new Operand(((Variable) symbol).value());
