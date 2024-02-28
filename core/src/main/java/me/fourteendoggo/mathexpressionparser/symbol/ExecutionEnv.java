@@ -39,6 +39,13 @@ public class ExecutionEnv {
     }
 
     /**
+     * Inserts a variable
+     */
+    public void insertVariable(String name, double value) {
+        insertSymbol(new Variable(name, value));
+    }
+
+    /**
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public void insertFunction(String name, DoubleSupplier fn) {
@@ -74,7 +81,7 @@ public class ExecutionEnv {
     }
 
     /**
-     * Inserts a function with a certain amount of parameters, which are retrieved from the function context.
+     * Inserts a function with a certain amount of parameters, which correspond to parameters in the function context.
      * @param name the function name
      * @param minArgs the minimum amount of arguments
      * @param maxArgs the maximum amount of arguments
