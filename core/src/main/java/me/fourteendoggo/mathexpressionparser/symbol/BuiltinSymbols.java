@@ -3,7 +3,6 @@ package me.fourteendoggo.mathexpressionparser.symbol;
 import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
-import org.jetbrains.annotations.ApiStatus;
 
 import java.util.SplittableRandom;
 
@@ -63,14 +62,20 @@ public abstract class BuiltinSymbols {
         env.insertFunction("min", 2, Integer.MAX_VALUE, ctx -> {
             double min = ctx.getDouble(0);
             for (int i = 1; i < ctx.size(); i++) {
-                min = Math.min(min, ctx.getDouble(i));
+                double val = ctx.getDouble(i);
+                if (val < min) {
+                    min = val;
+                }
             }
             return min;
         });
         env.insertFunction("max", 2, Integer.MAX_VALUE, ctx -> {
             double max = ctx.getDouble(0);
             for (int i = 1; i < ctx.size(); i++) {
-                max = Math.max(max, ctx.getDouble(i));
+                double val = ctx.getDouble(i);
+                if (val > max) {
+                    max = val;
+                }
             }
             return max;
         });
@@ -122,16 +127,5 @@ public abstract class BuiltinSymbols {
         });
 
         return env;
-    }
-
-    // TODO: remove
-    /**
-     * Initializes the given {@link ExecutionEnv} with all the standard functions and variables
-     * @param env the environment
-     */
-    @ApiStatus.Internal
-    @Deprecated(forRemoval = true)
-    public static void init(ExecutionEnv env) {
-        throw new UnsupportedOperationException("semantics moved to BuiltinSymbols.createExecutionEnv()");
     }
 }
