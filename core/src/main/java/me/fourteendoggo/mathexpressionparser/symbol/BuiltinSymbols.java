@@ -1,6 +1,5 @@
 package me.fourteendoggo.mathexpressionparser.symbol;
 
-import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
@@ -14,7 +13,7 @@ public abstract class BuiltinSymbols {
     /**
      * @return an {@link ExecutionEnv}, filled with all default functions.
      */
-    public static ExecutionEnv createExecutionEnv() {
+    static ExecutionEnv createExecutionEnv() {
         SplittableRandom capturedRandom = new SplittableRandom();
         ExecutionEnv env = new ExecutionEnv();
 

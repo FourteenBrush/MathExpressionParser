@@ -1,10 +1,9 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
+import me.fourteendoggo.mathexpressionparser.symbol.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
-import me.fourteendoggo.mathexpressionparser.symbol.BuiltinSymbols;
 import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
 import me.fourteendoggo.mathexpressionparser.symbol.Variable;
 import me.fourteendoggo.mathexpressionparser.token.Tokenizer;
@@ -98,7 +97,7 @@ public class ExpressionParser {
     private static ExecutionEnv getDefaultEnv() {
         // FIXME: store DEFAULT_ENV in an unloaded inner class?
         if (DEFAULT_ENV == null) {
-            DEFAULT_ENV = BuiltinSymbols.createExecutionEnv();
+            DEFAULT_ENV = ExecutionEnv.createDefault();
         }
         return DEFAULT_ENV;
     }

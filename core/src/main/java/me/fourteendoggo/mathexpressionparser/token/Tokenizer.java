@@ -1,6 +1,6 @@
 package me.fourteendoggo.mathexpressionparser.token;
 
-import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
+import me.fourteendoggo.mathexpressionparser.symbol.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;

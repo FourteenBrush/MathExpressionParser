@@ -1,12 +1,9 @@
-package me.fourteendoggo.mathexpressionparser.environment;
+package me.fourteendoggo.mathexpressionparser.symbol;
 
 import me.fourteendoggo.mathexpressionparser.exceptions.SymbolNotFoundException;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
-import me.fourteendoggo.mathexpressionparser.symbol.BuiltinSymbols;
-import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
-import me.fourteendoggo.mathexpressionparser.symbol.SymbolLookup;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.DoubleBinaryOperator;
@@ -29,6 +26,16 @@ public class ExecutionEnv {
      */
     public ExecutionEnv() {
         symbolLookup = new SymbolLookup();
+    }
+
+    /**
+     *
+     * @return a {@link ExecutionEnv} populated with all default symbols.
+     */
+    @ApiStatus.Experimental
+    public static ExecutionEnv createDefault() {
+        // delegate to BuiltinSymbols to not clutter this class
+        return BuiltinSymbols.createExecutionEnv();
     }
 
     /**

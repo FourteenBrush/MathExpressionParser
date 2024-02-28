@@ -1,7 +1,6 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
-import me.fourteendoggo.mathexpressionparser.symbol.BuiltinSymbols;
+import me.fourteendoggo.mathexpressionparser.symbol.ExecutionEnv;
 
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -10,7 +9,7 @@ public class Main {
     private static boolean running = true;
 
     public static void main(String[] args) {
-        ExecutionEnv env = BuiltinSymbols.createExecutionEnv();
+        ExecutionEnv env = ExecutionEnv.createDefault();
         env.insertFunction("exit", () -> {
             running = false;
             return 0;

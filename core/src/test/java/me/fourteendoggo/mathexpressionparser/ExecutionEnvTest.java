@@ -1,6 +1,6 @@
 package me.fourteendoggo.mathexpressionparser;
 
-import me.fourteendoggo.mathexpressionparser.environment.ExecutionEnv;
+import me.fourteendoggo.mathexpressionparser.symbol.ExecutionEnv;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
