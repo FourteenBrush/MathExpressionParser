@@ -8,7 +8,7 @@ import java.util.SplittableRandom;
 /**
  * A utility class used to create an {@link ExecutionEnv}, filled with all default functions.
  */
-public abstract class BuiltinSymbols {
+abstract class BuiltinSymbols {
 
     /**
      * @return an {@link ExecutionEnv}, filled with all default functions.
@@ -51,11 +51,11 @@ public abstract class BuiltinSymbols {
         // time-related
         env.insertFunction("now", () -> (double) System.currentTimeMillis()); //
         // constants
-        env.insertSymbol(new Variable("pi", Math.PI));
-        env.insertSymbol(new Variable("e", Math.E));
-        env.insertSymbol(new Variable("tau", Math.TAU));
-        env.insertSymbol(new Variable("true", 1));
-        env.insertSymbol(new Variable("false", 0));
+        env.insertVariable("pi", Math.PI);
+        env.insertVariable("e", Math.E);
+        env.insertVariable("tau", Math.TAU);
+        env.insertVariable("true", 1);
+        env.insertVariable("false", 0);
 
         // theoretical limit of Integer.MAX_VALUE parameters
         env.insertFunction("min", 2, Integer.MAX_VALUE, ctx -> {
