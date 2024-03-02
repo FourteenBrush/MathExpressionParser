@@ -3,6 +3,7 @@ package me.fourteendoggo.mathexpressionparser.function;
 import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
 import me.fourteendoggo.mathexpressionparser.symbol.SymbolType;
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
+import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.function.ToDoubleFunction;
 
@@ -21,10 +22,8 @@ public class FunctionCallSite implements Symbol {
     }
 
     public FunctionCallSite(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> function) {
-        // NOTE: function names are only checked for validity after insertion
-        if (name.isBlank()) {
-            throw new IllegalArgumentException("name must not be blank");
-        }
+        Assert.isTrue(Utility.isValidIdentifierName(name), "invalid function name %s", name);
+
         if (minArgs < 0 || maxArgs < 0 || minArgs > maxArgs) {
             throw new IllegalArgumentException("minArgs must be >= 0, maxArgs must be >= 0 and minArgs must be <= maxArgs");
         }
