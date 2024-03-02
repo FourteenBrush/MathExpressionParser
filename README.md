@@ -6,9 +6,6 @@
 
 A lightweight Java library for parsing and evaluating mathematical expressions.
 
-This algorithm works with a linked list of calculations that is created from the input string.
-The calculations are then evaluated with order of operations.
-
 ## Dependency
 
 There is both a Maven and Gradle dependency, which work with JitPack. In order to use them, replace `Tag` with the appropriate version which you can find on the
@@ -53,11 +50,11 @@ assert result == 12;
 ```
 
 > [!NOTE]
-> This method throws an unchecked `SyntaxException` if the syntax of the expression is invalid.
+> This method throws an unchecked `SyntaxException` if the expression is invalid.
 
 ### Functions and variables
 
-There is built-in support for trigonometric and other standard functions, click
+There is built-in support for trigonometric, mathematical and other common functions, click
 [here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to seem them all.
 
 Functions are called like normal Java methods, they can have zero or more arguments and can be nested:
@@ -79,7 +76,7 @@ double pi = ExpressionParser.parse("pi");
 assert pi == Math.PI;
 ```
 
-Currently, the variables `pi`, `e`, `tau`, `true` (1) and `false` (0) are built-in.
+Built-in variables are `pi`, `e`, `tau`, `true` (1) and `false` (0).
 
 ### Inserting custom functions and variables.
 
@@ -118,7 +115,7 @@ For more complex functions, take a look at the method that accepts a `Symbol` an
 Inserting variables is very similar:
 
 ```java
-ExpressionParser.insertSymbol(new Variable("magic", 1.234));
+ExpressionParser.insertVariable("magic", 1.234);
 double magic = ExpressionParser.parse("magic");
 assert magic == 1.234;
 ```
@@ -181,6 +178,9 @@ Take a look at the [Operator](core/src/main/java/me/fourteendoggo/mathexpression
 
 ## Additional information
 
+This algorithm works with a linked list of calculations that is created from the input string.
+The calculations are then evaluated with order of operations.
+
 The parser ignores spaces, except for spaces between two parts of a number, which are considered invalid.
 
 A list of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file.
@@ -218,9 +218,9 @@ boolean isLeapYear = Utility.doubleToBool(result);
 
 ```java
 ExecutionEnv env = new ExecutionEnv();
-env.insertSymbol(new Variable("x", 4));
-env.insertSymbol(new Variable("y", 2));
-env.insertSymbol(new Variable("z", 4));
+env.insertVariable("x", 4);
+env.insertVariable("y", 2);
+env.insertVariable("z", 4);
 
 double vectorMagnitude = ExpressionParser.parse("sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))", env);
 assert vectorMagnitude == 6;
