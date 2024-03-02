@@ -27,7 +27,7 @@ public enum Operator implements Token {
     public static final int HIGHEST_PRIORITY;
     private final String symbol;
     private final int priority;
-    private final DoubleBinaryOperator solver;
+    private final DoubleBinaryOperator func;
 
     static {
         int highestPriority = 0;
@@ -37,10 +37,10 @@ public enum Operator implements Token {
         HIGHEST_PRIORITY = highestPriority;
     }
 
-    Operator(String symbol, int priority, DoubleBinaryOperator solver) {
+    Operator(String symbol, int priority, DoubleBinaryOperator func) {
         this.symbol = symbol;
         this.priority = priority;
-        this.solver = solver;
+        this.func = func;
     }
 
     @Override
@@ -63,11 +63,11 @@ public enum Operator implements Token {
     }
 
     public double apply(Operand first, Operand second) {
-        return apply(first.getValue(), second.getValue());
+        return func.applyAsDouble(first.getValue(), second.getValue());
     }
 
     public double apply(double first, double second) {
-        return solver.applyAsDouble(first, second);
+        return func.applyAsDouble(first, second);
     }
 
     @Override

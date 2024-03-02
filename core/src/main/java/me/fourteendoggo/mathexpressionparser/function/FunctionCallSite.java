@@ -21,6 +21,7 @@ public class FunctionCallSite implements Symbol {
     }
 
     public FunctionCallSite(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> function) {
+        // NOTE: function names are only checked for validity after insertion
         if (name.isBlank()) {
             throw new IllegalArgumentException("name must not be blank");
         }

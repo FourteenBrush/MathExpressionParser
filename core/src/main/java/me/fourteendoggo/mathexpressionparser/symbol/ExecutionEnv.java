@@ -109,7 +109,7 @@ public class ExecutionEnv {
      */
     @ApiStatus.Internal
     public Symbol lookupSymbol(char[] buf, int pos) {
-        Symbol symbol = symbolLookup.lookup(buf, pos); // already incremented pos
+        Symbol symbol = symbolLookup.lookup(buf, pos);
         if (symbol == null) {
             String bufAsStr = new String(buf, pos, buf.length - pos);
             // TODO: also change when valid chars for symbol name change

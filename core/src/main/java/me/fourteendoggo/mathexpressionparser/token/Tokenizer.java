@@ -15,7 +15,9 @@ import java.util.function.IntPredicate;
 public class Tokenizer {
     private final char[] source;
     private final ExecutionEnv env;
-    private final Expression tokens;
+    private final Expression expr = new Expression();
+    // indicates whether we should keep processing character
+    // e.g. to implement sub-tokenizers
     private final IntPredicate loopCondition;
     private int pos;
 
@@ -27,7 +29,6 @@ public class Tokenizer {
         this.source = source;
         this.env = env;
         this.loopCondition = loopCondition;
-        this.tokens = new Expression();
     }
 
     public Expression readTokens() {
@@ -36,145 +37,101 @@ public class Tokenizer {
             switch (current) {
                 case ' ', '\r', '\t' -> {} // no-op
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> pushOperand(current);
-                case '*' -> tokens.pushToken(Operator.MULTIPLICATION);
-                case '/' -> tokens.pushToken(Operator.DIVISION);
-                case '+' -> tokens.pushToken(Operator.ADDITION);
-                case '%' -> tokens.pushToken(Operator.MODULO);
-                case '^' -> tokens.pushToken(Operator.BITWISE_XOR);
+                case '*' -> expr.pushToken(Operator.MULTIPLICATION);
+                case '/' -> expr.pushToken(Operator.DIVISION);
+                case '+' -> expr.pushToken(Operator.ADDITION);
+                case '%' -> expr.pushToken(Operator.MODULO);
+                case '^' -> expr.pushToken(Operator.BITWISE_XOR);
                 case '-' -> {
-                    switch (tokens.getLastType()) {
-                        case OPERAND -> tokens.pushToken(Operator.SUBTRACTION);
+                    switch (expr.getLastType()) {
+                        case OPERAND -> expr.pushToken(Operator.SUBTRACTION);
                         case OPERATOR -> pushNegativeOperand();
                     }
                 }
                 case '<' -> {
                     switch (advanceOrThrow()) {
-                        case '<' -> tokens.pushToken(Operator.LEFT_SHIFT);
-                        case '=' -> tokens.pushToken(Operator.LESS_THAN_OR_EQUAL);
+                        case '<' -> expr.pushToken(Operator.LEFT_SHIFT);
+                        case '=' -> expr.pushToken(Operator.LESS_THAN_OR_EQUAL);
                         default -> {
-                            tokens.pushToken(Operator.LESS_THAN);
+                            expr.pushToken(Operator.LESS_THAN);
                             pos--; // put the character after < back
                         }
                     }
                 }
                 case '>' -> {
                     switch (advanceOrThrow()) {
-                        case '>' -> tokens.pushToken(Operator.RIGHT_SHIFT);
-                        case '=' -> tokens.pushToken(Operator.GREATER_THAN_OR_EQUAL);
+                        case '>' -> expr.pushToken(Operator.RIGHT_SHIFT);
+                        case '=' -> expr.pushToken(Operator.GREATER_THAN_OR_EQUAL);
                         default -> {
-                            tokens.pushToken(Operator.GREATER_THAN);
+                            expr.pushToken(Operator.GREATER_THAN);
                             pos--; // put the character after > back
                         }
                     }
                 }
                 case '=' -> {
                     matchOrThrow('=', "expected another '=' for comparison");
-                    tokens.pushToken(Operator.EQUALS);
+                    expr.pushToken(Operator.EQUALS);
                 }
                 case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
                      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
                     // support for things like 2cos(1) -> 2 * cos(1)
-                    if (tokens.getLastType() == TokenType.OPERAND) {
-                        tokens.pushToken(Operator.MULTIPLICATION);
+                    if (expr.getLastType() == TokenType.OPERAND) {
+                        expr.pushToken(Operator.MULTIPLICATION);
                     }
-                    tokens.pushToken(readSymbol());
-                    // tokens.pushToken(readFunctionCall0());
+                    expr.pushToken(readSymbol());
                 }
                 case '&' -> {
                     if (match('&')) { // already standing on the second '&' then
-                        tokens.pushToken(Operator.LOGICAL_AND);
+                        expr.pushToken(Operator.LOGICAL_AND);
                     } else {
-                        tokens.pushToken(Operator.BITWISE_AND);
+                        expr.pushToken(Operator.BITWISE_AND);
                     }
                 }
                 case '|' -> {
                     if (match('|')) {
-                        tokens.pushToken(Operator.LOGICAL_OR);
+                        expr.pushToken(Operator.LOGICAL_OR);
                     } else {
-                        tokens.pushToken(Operator.BITWISE_OR);
+                        expr.pushToken(Operator.BITWISE_OR);
                     }
                 }
                 case '(' -> {
                     // support for things like 2(1 + 1) -> 2 * (1 + 1)
-                    if (tokens.getLastType() == TokenType.OPERAND) {
-                        tokens.pushToken(Operator.MULTIPLICATION);
+                    if (expr.getLastType() == TokenType.OPERAND) {
+                        expr.pushToken(Operator.MULTIPLICATION);
                     }
-                    tokens.pushToken(readBrackets());
+                    expr.pushToken(readBrackets());
                 }
                 case '!' -> {
                     if (currentOrThrow("expected an operand") == '=') {
                         advance();
-                        tokens.pushToken(Operator.NOT_EQUALS);
+                        expr.pushToken(Operator.NOT_EQUALS);
                     } else { // one of the highest priority operators, can be solved immediately
                         Tokenizer tokenizer = branchOff(loopCondition, pos);
                         double toBeNegated = tokenizer.readTokens().solve();
                         pos = tokenizer.pos;
-                        tokens.pushToken(new Operand(Utility.boolNot(toBeNegated)));
+                        expr.pushToken(new Operand(Utility.boolNot(toBeNegated)));
                     }
                 }
                 case '~' -> { // one of the highest priority operators, can be solved immediately
                     Tokenizer tokenizer = branchOff(loopCondition, pos);
                     int input = Utility.requireInt(tokenizer.readTokens().solve());
                     pos = tokenizer.pos;
-                    tokens.pushToken(new Operand(~input));
+                    expr.pushToken(new Operand(~input));
                 }
                 default -> throw new SyntaxException("unexpected character " + current);
             }
         }
-        return tokens;
-    }
-
-    private boolean hasRemaining() {
-        return pos < source.length && loopCondition.test(source[pos]);
-    }
-
-    private char advance() {
-        return source[pos++];
-    }
-
-    private char advanceOrThrow() {
-        Assert.isTrue(hasRemaining(), "expected an operand");
-        return advance();
-    }
-
-    private char currentOrThrow(String fmt, Object... placeholders) {
-        Assert.isTrue(pos < source.length, fmt, placeholders);
-        return source[pos];
-    }
-
-    private char currentOrDefault() {
-        if (pos < source.length) {
-            return source[pos];
-        }
-        return '\0';
-    }
-
-    private boolean match(char c) {
-        if (pos >= source.length || source[pos] != c) {
-            return false;
-        }
-        pos++;
-        return true;
-    }
-
-    private void matchOrThrow(char expected, String fmt, Object... placeholders) {
-        Assert.isTrue(match(expected), fmt, placeholders);
-    }
-
-    private Tokenizer branchOff(IntPredicate newLoopCondition, int newPos) {
-        Tokenizer tokenizer = new Tokenizer(source, env, newLoopCondition);
-        tokenizer.pos = newPos;
-        return tokenizer;
+        return expr;
     }
 
     private void pushNegativeOperand() {
         double value = -readDouble('0', false);
-        tokens.pushToken(new Operand(value));
+        expr.pushToken(new Operand(value));
     }
-    
+
     private void pushOperand(char initialChar) {
         double value = readDouble(initialChar, true);
-        tokens.pushToken(new Operand(value));
+        expr.pushToken(new Operand(value));
     }
 
     /**
@@ -359,5 +316,48 @@ public class Tokenizer {
         matchOrThrow(')', "missing closing parenthesis for function %s", functionName);
 
         return new Operand(desc.apply(parameters));
+    }
+
+    private boolean hasRemaining() {
+        return pos < source.length && loopCondition.test(source[pos]);
+    }
+
+    private char advance() {
+        return source[pos++];
+    }
+
+    private char advanceOrThrow() {
+        Assert.isTrue(hasRemaining(), "expected an operand");
+        return advance();
+    }
+
+    private char currentOrThrow(String fmt, Object... placeholders) {
+        Assert.isTrue(pos < source.length, fmt, placeholders);
+        return source[pos];
+    }
+
+    private char currentOrDefault() {
+        if (pos < source.length) {
+            return source[pos];
+        }
+        return '\0';
+    }
+
+    private boolean match(char c) {
+        if (pos >= source.length || source[pos] != c) {
+            return false;
+        }
+        pos++;
+        return true;
+    }
+
+    private void matchOrThrow(char expected, String fmt, Object... placeholders) {
+        Assert.isTrue(match(expected), fmt, placeholders);
+    }
+
+    private Tokenizer branchOff(IntPredicate newLoopCondition, int newPos) {
+        Tokenizer tokenizer = new Tokenizer(source, env, newLoopCondition);
+        tokenizer.pos = newPos;
+        return tokenizer;
     }
 }
