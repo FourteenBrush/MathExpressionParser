@@ -15,6 +15,7 @@ public class Main {
             return 0;
         });
         env.insertVariable("x0", 1);
+        env.insertVariable("x1A", 1);
 
         Scanner in = new Scanner(System.in);
 
