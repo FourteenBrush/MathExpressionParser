@@ -1,6 +1,7 @@
 package me.fourteendoggo.mathexpressionparser.symbol;
 
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
+import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.SplittableRandom;
@@ -14,7 +15,6 @@ abstract class BuiltinSymbols {
      * @return an {@link ExecutionEnv}, filled with all default functions.
      */
     static ExecutionEnv createExecutionEnv() {
-        SplittableRandom capturedRandom = new SplittableRandom();
         ExecutionEnv env = new ExecutionEnv();
 
         // trigonometric
@@ -78,6 +78,13 @@ abstract class BuiltinSymbols {
             }
             return max;
         });
+        env.insertFunction("clamp", 3, ctx -> {
+            double value = ctx.getDouble(0);
+            double min = ctx.getDouble(1);
+            double max = ctx.getDouble(2);
+            Assert.isTrue(max >= min, "clamp: max must be greater than or equal to min");
+            return (value > max) ? max : Math.max(value, min);
+        });
         env.insertFunction("avg", 2, Integer.MAX_VALUE, ctx -> {
             double sum = 0;
             for (int i = 0; i < ctx.size(); i++) {
@@ -105,9 +112,9 @@ abstract class BuiltinSymbols {
         env.insertFunction("rand", 0, 2, ctx -> {
             try {
                 return switch (ctx.size()) {
-                    case 0 -> capturedRandom.nextDouble();
-                    case 1 -> capturedRandom.nextDouble(ctx.getDouble(0));
-                    default -> capturedRandom.nextDouble(ctx.getDouble(0), ctx.getDouble(1));
+                    case 0 -> RandomHolder.RANDOM.nextDouble();
+                    case 1 -> RandomHolder.RANDOM.nextDouble(ctx.getDouble(0));
+                    default -> RandomHolder.RANDOM.nextDouble(ctx.getDouble(0), ctx.getDouble(1));
                 };
             } catch (IllegalArgumentException e) {
                 // random throws this when f.e. the bound > the origin, translate this into a SyntaxException
@@ -126,5 +133,9 @@ abstract class BuiltinSymbols {
         });
 
         return env;
+    }
+
+    static class RandomHolder {
+        private static final SplittableRandom RANDOM = new SplittableRandom();
     }
 }
