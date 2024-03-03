@@ -29,6 +29,32 @@ public class Utility {
         return intVal;
     }
 
+    public static boolean isValidIdentifierFirstChar(char c) {
+        c |= ' '; // set lowercase bit
+        return c >= 'a' && c <= 'z';
+    }
+
+    // same as isValidIdentifierCharLowerCase but also handles uppercase chars
+    public static boolean isValidIdentifierChar(char c) {
+        if (c >= '0' && c <= '9') return true;
+        c |= ' ';
+        return (c >= 'a' && c <= 'z');
+    }
+
+    private static boolean isValidIdentifierCharLowerCase(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+    }
+
+    public static boolean isValidIdentifierName(String name) {
+        if (name.isEmpty() || !isValidIdentifierFirstChar(name.charAt(0))) return false;
+        for (int i = 1; i < name.length(); i++) {
+            // numbers are immune to OR ' '
+            char c = (char) (name.charAt(i) | ' ');
+            if (!isValidIdentifierCharLowerCase(c)) return false;
+        }
+        return true;
+    }
+
     public static double boolToDouble(boolean x) {
         return x ? 1 : 0;
     }

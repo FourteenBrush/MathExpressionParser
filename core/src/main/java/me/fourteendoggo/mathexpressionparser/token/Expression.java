@@ -23,23 +23,22 @@ public class Expression {
         }
 
         // if we could not reuse the last operand of tail, allocate a new tail
-        if (!tail.isComplete() || tail.simplify()) {
-            tail.pushToken(token);
-        } else {
+        if (tail.isComplete() && !tail.simplify()) {
             tail.next = new LinkedCalculation(tail, tail.right, (Operator) token);
             tail = tail.next;
             numCalculations++;
+        } else {
+            tail.pushToken(token);
         }
     }
 
     private void checkType(TokenType type) {
         if (lastType != type) return;
 
-        String message = switch (type) {
+        throw new SyntaxException(switch (type) {
             case OPERAND -> "expected operator, got operand";
             case OPERATOR -> "expected operand, got operator";
-        };
-        throw new SyntaxException(message);
+        });
     }
 
     /**
@@ -73,14 +72,13 @@ public class Expression {
                 LinkedCalculation first = head;
                 LinkedCalculation second = first.next;
 
-                // `x operator y operator` was previously throwing a npe
                 Assert.notNull(second.right, "unexpected trailing operator");
 
                 if (first.mayExecuteFirst()) {
                     // f.e. 2*3+2
-                    double leftOperand = first.solve();
+                    double firstOperand = first.solve();
                     double secondOperand = second.right.getValue();
-                    yield second.operator.apply(leftOperand, secondOperand);
+                    yield second.operator.apply(firstOperand, secondOperand);
                 }
                 // f.e. 2+3*2
                 double firstOperand = first.left.getValue();
@@ -191,7 +189,7 @@ public class Expression {
 
         /**
          * Pushes a token to this calculation object.
-         * The caller should check {@link #isComplete()} before to ensure they don't overwrite the same fields again,
+         * The caller should check {@link #isComplete()} before, to ensure they don't overwrite the same fields again,
          * as this just sets fields and doesn't check anything.
          * @param token the token to push, either an operand or an operator
          */

@@ -19,6 +19,7 @@ import java.util.function.ToDoubleFunction;
  * only symbols found in this environment will be seen.
  */
 public class ExecutionEnv {
+    //private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9]*");
     private final SymbolLookup symbolLookup;
 
     /**
@@ -38,9 +39,6 @@ public class ExecutionEnv {
         return BuiltinSymbols.createExecutionEnv();
     }
 
-    /**
-     * Inserts a variable
-     */
     public void insertVariable(String name, double value) {
         insertSymbol(new Variable(name, value));
     }
@@ -113,7 +111,7 @@ public class ExecutionEnv {
         if (symbol == null) {
             String bufAsStr = new String(buf, pos, buf.length - pos);
             // TODO: also change when valid chars for symbol name change
-            String symbolName = bufAsStr.split("[^a-zA-Z]")[0];
+            String symbolName = bufAsStr.split("[^a-zA-Z0-9]")[0];
             throw new SymbolNotFoundException(symbolName);
         }
         return symbol;

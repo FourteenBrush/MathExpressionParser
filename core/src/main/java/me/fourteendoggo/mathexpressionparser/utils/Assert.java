@@ -28,4 +28,10 @@ public interface Assert {
             throw new IndexOutOfBoundsException(message.formatted(placeholders));
         }
     }
+
+    static void isValidIdentifierName(String name) {
+        if (!Utility.isValidIdentifierName(name)) {
+            throw new SyntaxException("Invalid identifier name: " + name);
+        }
+    }
 }

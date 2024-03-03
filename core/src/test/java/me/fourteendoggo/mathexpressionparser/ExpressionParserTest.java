@@ -22,7 +22,9 @@ class ExpressionParserTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/negative-input.csv")
     void testNegativeTestCases(String expression) {
-        assertThatCode(() -> ExpressionParser.parse(expression)).isInstanceOf(SyntaxException.class);
+        assertThatCode(() -> ExpressionParser.parse(expression))
+                .withFailMessage(expression)
+                .isInstanceOf(SyntaxException.class);
     }
 
     @Test
