@@ -28,6 +28,10 @@ public class FunctionContext {
         return size;
     }
 
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
     /**
      * Adds a parameter to this context, resizing the internal array if necessary.
      * This should not be called to modify any parameters after they have been set.
