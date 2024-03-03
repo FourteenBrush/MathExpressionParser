@@ -46,9 +46,8 @@ public class FunctionCallSite implements Symbol {
         return maxArgs > 0;
     }
 
-    public FunctionContext allocateParameters() { // TODO: think of a better way to do this, avoid branches
-        // I'd rather not allocate a double array of Integer.MAX_VALUE size
-        return new FunctionContext(Math.min(maxArgs, 20));
+    public FunctionContext allocateParameters() {
+        return new FunctionContext(16);
     }
 
     public double apply(FunctionContext context) {
