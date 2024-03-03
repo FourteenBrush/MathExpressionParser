@@ -104,19 +104,20 @@ public class Utility {
         return a;
     }
 
-    private static int fastUnsignedGcd(int a, int b) {
+    public static int lcm(int a, int b) {
+        if (b == 0) return 0;
+        if (a < 0) a = -a;
+        if (b < 0) b = -b;
+
+        final int aCopy = a;
+        final int bCopy = b;
+
         while (b != 0) {
             int tmp = b;
             b = a % b;
             a = tmp;
         }
-        return a;
-    }
 
-    public static int lcm(int a, int b) {
-        if (b == 0) return 0;
-        if (a < 0) a = -a;
-        if (b < 0) b = -b;
-        return a / fastUnsignedGcd(a, b) * b;
+        return aCopy / a * bCopy;
     }
 }
