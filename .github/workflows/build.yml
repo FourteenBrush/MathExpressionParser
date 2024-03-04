@@ -10,13 +10,13 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
 
 jobs:
   build:
-    if: "!contains(github.event.head_commit.message, '[skip-ci]')"
+    if: ${{ !contains(github.event.head_commit.message, '[skip-ci]') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,15 @@ jobs:
         java-version: '17'
         distribution: 'adopt'
         cache: maven
+
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4.0.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: FourteenBrush/MathExpressionParser
+
     - name: Trigger Jitpack build
       run: curl "https://jitpack.io/com/github/FourteenBrush/MathExpressionParser/${GITHUB_SHA:0:10}/build.log"

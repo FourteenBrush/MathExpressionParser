@@ -1,6 +1,7 @@
 # MathExpressionParser
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/FourteenBrush/MathExpressionParser/build.yml)
+![Code Coverage](https://img.shields.io/codecov/c/github/FourteenBrush/MathExpressionParser)
 ![GitHub License](https://img.shields.io/github/license/FourteenBrush/MathExpressionParser)
 [![GitHub release](https://img.shields.io/github/v/release/FourteenBrush/MathExpressionParser)](https://github.com/FourteenBrush/MathExpressionParser/releases)
 
@@ -8,7 +9,7 @@ A lightweight Java library for parsing and evaluating mathematical expressions.
 
 ## Dependency
 
-There is both a Maven and Gradle dependency, which work with JitPack. In order to use them, replace `Tag` with the appropriate version which you can find on the
+Don't forget to replace `Tag` with the appropriate version, which you can find on the
 [releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this file.
 
 ### Maven:
