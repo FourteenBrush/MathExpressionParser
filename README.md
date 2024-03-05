@@ -1,6 +1,7 @@
 # MathExpressionParser
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/FourteenBrush/MathExpressionParser/build.yml)
+![Code Coverage](https://img.shields.io/codecov/c/github/FourteenBrush/MathExpressionParser)
 ![GitHub License](https://img.shields.io/github/license/FourteenBrush/MathExpressionParser)
 [![GitHub release](https://img.shields.io/github/v/release/FourteenBrush/MathExpressionParser)](https://github.com/FourteenBrush/MathExpressionParser/releases)
 
@@ -8,8 +9,7 @@ A lightweight Java library for parsing and evaluating mathematical expressions.
 
 ## Dependency
 
-There is both a Maven and Gradle dependency, which work with [JitPack](https://www.jitpack.io/#FourteenBrush/MathExpressionParser). 
-In order to use them, replace `Tag` with the appropriate version which you can find on the
+Don't forget to replace `Tag` with the appropriate version, which you can find on the
 [releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this file.
 
 ### Maven:
@@ -92,8 +92,6 @@ This inserts into the global execution environment, examples:
 ExpressionParser.insertFunction("twice", number -> number * 2);
 double result = ExpressionParser.parse("twice(2)");
 assert result == 4;
-
-
 ```
 
 Functions cannot be overloaded, but you can define a function that accepts a variable amount of arguments.  
@@ -128,7 +126,7 @@ assert magic == 1.234;
 
 ### Using a custom execution environment (recommended):
 
-As said above, inserting functions or variables will place them in the global symbol lookup.
+As mentioned above, inserting functions or variables will place them in the global symbol lookup.
 If you want more flexibility over what symbols can be used in what context, you can explicitly provide a
 `ExecutionEnv`:
 
