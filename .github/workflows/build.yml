@@ -34,7 +34,7 @@ jobs:
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4.0.1
       with:
-        files: ./core/target/site/jacoco
+        files: ./core/target/site/jacoco/index.html
         directory: ./core/target/site/jacoco
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: FourteenBrush/MathExpressionParser
