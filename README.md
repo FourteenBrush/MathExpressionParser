@@ -8,7 +8,8 @@ A lightweight Java library for parsing and evaluating mathematical expressions.
 
 ## Dependency
 
-There is both a Maven and Gradle dependency, which work with JitPack. In order to use them, replace `Tag` with the appropriate version which you can find on the
+There is both a Maven and Gradle dependency, which work with [JitPack](https://www.jitpack.io/#FourteenBrush/MathExpressionParser). 
+In order to use them, replace `Tag` with the appropriate version which you can find on the
 [releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this file.
 
 ### Maven:
@@ -42,7 +43,7 @@ dependencies {
 
 ## Usage
 
-To parse an expression, just call the static `parse` method of the [ExpressionParser](core/src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class:
+To parse an expression, call the static `parse` method of the [ExpressionParser](core/src/main/java/me/fourteendoggo/mathexpressionparser/ExpressionParser.java) class:
 
 ```java
 double result = ExpressionParser.parse("3(5-1)");
@@ -57,7 +58,7 @@ assert result == 12;
 There is built-in support for trigonometric, mathematical and other common functions, click
 [here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to seem them all.
 
-Functions are called like normal Java methods, they can have zero or more arguments and can be nested:
+Functions are called like normal Java methods, they can have zero or more parameters and can be nested:
 
 ```java
 double result = ExpressionParser.parse("sin(rad(90))");
@@ -74,13 +75,16 @@ Variables are just called by their name like you would expect them.
 ```java
 double pi = ExpressionParser.parse("pi");
 assert pi == Math.PI;
+
+double one = ExpressionParser.parse("true == 1");
+assert one == 1;
 ```
 
 Built-in variables are `pi`, `e`, `tau`, `true` (1) and `false` (0).
 
 ### Inserting custom functions and variables.
 
-To insert custom functions or variables, you need to call the appropriate `insertFunction` method on the `ExpressionParser` class.
+To insert custom functions or variables, call the appropriate insert method on the `ExpressionParser` class.
 This inserts into the global execution environment, examples:
 
 ```java
@@ -88,6 +92,8 @@ This inserts into the global execution environment, examples:
 ExpressionParser.insertFunction("twice", number -> number * 2);
 double result = ExpressionParser.parse("twice(2)");
 assert result == 4;
+
+
 ```
 
 Functions cannot be overloaded, but you can define a function that accepts a variable amount of arguments.  
@@ -107,7 +113,7 @@ ExpressionParser.insertFunction("add", 2, 10, ctx -> {
 double result = ExpressionParser.parse("add(1, 2, 4)");
 assert result == 7;
 ```
-PS: don't actually do this, there is already a built-in sum function.
+PS: don't actually do this, there is already a built-in `sum` function.
 
 For more complex functions, take a look at the method that accepts a `Symbol` and pass in a 
 [FunctionCallSite](core/src/main/java/me/fourteendoggo/mathexpressionparser/function/FunctionCallSite.java).
@@ -122,7 +128,7 @@ assert magic == 1.234;
 
 ### Using a custom execution environment (recommended):
 
-As mentioned above, inserting functions or variables will place them in the global symbol lookup.
+As said above, inserting functions or variables will place them in the global symbol lookup.
 If you want more flexibility over what symbols can be used in what context, you can explicitly provide a
 `ExecutionEnv`:
 
@@ -134,16 +140,13 @@ env.insertFunction("day", () -> {
     return day.getValue();
 });
 
-// still have to provide the environment where that function will be searched for
+// tell the parser which environment to use
 double dayOfWeek = ExpressionParser.parse("day()", env); 
 assert dayOfWeek >= 1 && dayOfWeek <= 7;
 
 // ERROR: global environment does not have this function, we did not specify our own one so the global one is used
 double error = ExpressionParser.parse("day()");
 ```
-
-> [!NOTE]
-> Function and variable names must only contain lowercase letters (a-z), this is subject to change.
 
 ### Operators
 
