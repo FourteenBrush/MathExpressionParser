@@ -14,12 +14,13 @@ import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
 
+import static me.fourteendoggo.mathexpressionparser.ExpressionParser.DefaultEnvHolder.DEFAULT_ENV;
+
 /**
  * Frontend of the expression parser.
  */
 @SuppressWarnings("unused")
 public class ExpressionParser {
-    private static ExecutionEnv DEFAULT_ENV;
 
     private ExpressionParser() {}
 
@@ -27,7 +28,7 @@ public class ExpressionParser {
      * @see ExpressionParser#parse(String, ExecutionEnv)
      */
     public static double parse(String input) {
-        return parse(input, getDefaultEnv());
+        return parse(input, DEFAULT_ENV);
     }
 
     /**
@@ -51,21 +52,21 @@ public class ExpressionParser {
      * @see #insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, DoubleSupplier fn) {
-        getDefaultEnv().insertFunction(functionName, fn);
+        DEFAULT_ENV.insertFunction(functionName, fn);
     }
 
     /**
      * @see ExecutionEnv#insertFunction(String, DoubleUnaryOperator)
      */
     public static void insertFunction(String functionName, DoubleUnaryOperator fn) {
-        getDefaultEnv().insertFunction(functionName, fn);
+        DEFAULT_ENV.insertFunction(functionName, fn);
     }
 
     /**
      * @see ExecutionEnv#insertFunction(String, DoubleBinaryOperator)
      */
     public static void insertFunction(String functionName, DoubleBinaryOperator fn) {
-        getDefaultEnv().insertFunction(functionName, fn);
+        DEFAULT_ENV.insertFunction(functionName, fn);
     }
 
     /**
@@ -81,7 +82,7 @@ public class ExpressionParser {
      * @see ExecutionEnv#insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
-        getDefaultEnv().insertFunction(functionName, minArgs, maxArgs, fn);
+        DEFAULT_ENV.insertFunction(functionName, minArgs, maxArgs, fn);
     }
 
     /**
@@ -91,14 +92,10 @@ public class ExpressionParser {
      * @see Variable
      */
     public static void insertSymbol(Symbol symbol) {
-        getDefaultEnv().insertSymbol(symbol);
+        DEFAULT_ENV.insertSymbol(symbol);
     }
 
-    private static ExecutionEnv getDefaultEnv() {
-        // FIXME: store DEFAULT_ENV in an unloaded inner class?
-        if (DEFAULT_ENV == null) {
-            DEFAULT_ENV = ExecutionEnv.createDefault();
-        }
-        return DEFAULT_ENV;
+    static class DefaultEnvHolder {
+        static final ExecutionEnv DEFAULT_ENV = ExecutionEnv.createDefault();
     }
 }
