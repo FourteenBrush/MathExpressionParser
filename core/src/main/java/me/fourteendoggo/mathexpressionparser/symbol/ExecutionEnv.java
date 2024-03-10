@@ -10,6 +10,7 @@ import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleSupplier;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
+import java.util.regex.Pattern;
 
 // TODO: add support for removing/ inserting if absent
 
@@ -19,7 +20,7 @@ import java.util.function.ToDoubleFunction;
  * only symbols found in this environment will be seen.
  */
 public class ExecutionEnv {
-    //private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9]*");
+    private static final Pattern INVERSE_IDENTIFIER_PATTERN = Pattern.compile("[^a-zA-Z_0-9]");
     private final SymbolLookup symbolLookup;
 
     /**
@@ -118,8 +119,7 @@ public class ExecutionEnv {
         Symbol symbol = symbolLookup.lookup(buf, pos);
         if (symbol == null) {
             String bufAsStr = new String(buf, pos, buf.length - pos);
-            // TODO: also change when valid chars for symbol name change
-            String symbolName = bufAsStr.split("[^a-zA-Z0-9_]")[0];
+            String symbolName = INVERSE_IDENTIFIER_PATTERN.split(bufAsStr)[0];
             throw new SymbolNotFoundException(symbolName);
         }
         return symbol;
