@@ -131,7 +131,7 @@ If you want more flexibility over what symbols can be used in what context, you 
 `ExecutionEnv`:
 
 ```java
-ExecutionEnv env = new ExecutionEnv();
+ExecutionEnv env = ExecutionEnv.empty();
 // 'day' function is only bound to this environment
 env.insertFunction("day", () -> {
     DayOfWeek day = LocalDate.now().getDayOfWeek();
@@ -203,7 +203,7 @@ A list of examples (tests, which should all be working) can be found in the [tes
 ```java
 Scanner in = new Scanner(System.in);
 
-ExecutionEnv env = new ExecutionEnv();
+ExecutionEnv env = ExecutionEnv.createDefault();
 env.insertFunction("input", in::nextDouble);
 
 env.insertFunction("isleapyear", 1, ctx -> {
@@ -218,7 +218,7 @@ boolean isLeapYear = Utility.doubleToBool(result);
 ```
 
 ```java
-ExecutionEnv env = new ExecutionEnv();
+ExecutionEnv env = ExecutionEnv.createDefault();
 env.insertVariable("x", 4);
 env.insertVariable("y", 2);
 env.insertVariable("z", 4);

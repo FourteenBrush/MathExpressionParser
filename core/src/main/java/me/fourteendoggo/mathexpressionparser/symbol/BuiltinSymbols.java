@@ -15,7 +15,7 @@ abstract class BuiltinSymbols {
      * @return an {@link ExecutionEnv}, filled with all default functions.
      */
     static ExecutionEnv createExecutionEnv() {
-        ExecutionEnv env = new ExecutionEnv();
+        ExecutionEnv env = ExecutionEnv.empty();
 
         // trigonometric
         env.insertFunction("sin", Math::sin);

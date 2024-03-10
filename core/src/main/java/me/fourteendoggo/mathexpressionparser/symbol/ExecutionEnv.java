@@ -23,13 +23,19 @@ public class ExecutionEnv {
     private final SymbolLookup symbolLookup;
 
     /**
-     * Creates an empty {@link ExecutionEnv}, no symbols are bound.
+     * @see ExecutionEnv#empty()
      */
+    @Deprecated(forRemoval = true)
     public ExecutionEnv() {
         symbolLookup = new SymbolLookup();
     }
 
-    // TODO: add empty()
+    /**
+     * Creates an empty {@link ExecutionEnv}, no symbols are bound.
+     */
+    public static ExecutionEnv empty() {
+        return new ExecutionEnv();
+    }
 
     /**
      *

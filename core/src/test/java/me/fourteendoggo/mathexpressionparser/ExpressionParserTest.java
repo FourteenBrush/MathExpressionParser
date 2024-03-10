@@ -16,7 +16,7 @@ class ExpressionParserTest {
 
     @BeforeEach
     void setUp() {
-        env = new ExecutionEnv();
+        env = ExecutionEnv.empty();
     }
 
     @ParameterizedTest
@@ -43,14 +43,14 @@ class ExpressionParserTest {
         assertThatThrownBy(() -> ExpressionParser.parse(null)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> ExpressionParser.parse("1", null)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> ExpressionParser.parse(null, null)).isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> ExpressionParser.parse(null, new ExecutionEnv())).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> ExpressionParser.parse(null, ExecutionEnv.empty())).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> ExpressionParser.parse("")).isInstanceOf(SyntaxException.class);
     }
 
     @Test
     @Disabled // TODO: fix #1
     void reproduce() {
-        ExecutionEnv env = new ExecutionEnv();
+        ExecutionEnv env = ExecutionEnv.empty();
         env.insertVariable("xy", 1);
         env.insertVariable("x", 2);
         env.insertVariable("y", 3);

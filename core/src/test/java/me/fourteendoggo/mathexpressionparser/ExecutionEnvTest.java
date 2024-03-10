@@ -13,7 +13,7 @@ public class ExecutionEnvTest {
 
     @BeforeEach
     void setUp() {
-        env = new ExecutionEnv();
+        env = ExecutionEnv.empty();
     }
 
     @Test
