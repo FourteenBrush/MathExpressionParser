@@ -29,6 +29,8 @@ public class ExecutionEnv {
         symbolLookup = new SymbolLookup();
     }
 
+    // TODO: add empty()
+
     /**
      *
      * @return a {@link ExecutionEnv} populated with all default symbols.
@@ -111,7 +113,7 @@ public class ExecutionEnv {
         if (symbol == null) {
             String bufAsStr = new String(buf, pos, buf.length - pos);
             // TODO: also change when valid chars for symbol name change
-            String symbolName = bufAsStr.split("[^a-zA-Z0-9]")[0];
+            String symbolName = bufAsStr.split("[^a-zA-Z0-9_]")[0];
             throw new SymbolNotFoundException(symbolName);
         }
         return symbol;

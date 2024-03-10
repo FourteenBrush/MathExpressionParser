@@ -6,6 +6,7 @@ import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.Arrays;
 
+// FIXME: implement PrimitiveIterator.OfDouble maybe?
 /**
  * A class that provides parameters for a {@link FunctionCallSite}. Acts as an array of doubles.
  */
@@ -17,7 +18,7 @@ public class FunctionContext {
      * Creates a new FunctionContext with a given initial capacity for holding parameters
      * @param initialCapacity the initial capacity
      */
-    FunctionContext(int initialCapacity) { // package-private
+    FunctionContext(int initialCapacity) {
         parameters = new double[initialCapacity];
     }
 

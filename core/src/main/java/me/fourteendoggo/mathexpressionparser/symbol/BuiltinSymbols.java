@@ -49,7 +49,7 @@ abstract class BuiltinSymbols {
         // maybe to transform a double to either 1 or 0
         env.insertFunction("bool", d -> d == 0 ? 0 : 1);
         // time-related
-        env.insertFunction("now", () -> (double) System.currentTimeMillis()); //
+        env.insertFunction("now", () -> (double) System.currentTimeMillis()); // we are good for a while
         // constants
         env.insertVariable("pi", Math.PI);
         env.insertVariable("e", Math.E);

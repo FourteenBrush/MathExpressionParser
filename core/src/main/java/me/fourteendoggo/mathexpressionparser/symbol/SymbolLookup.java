@@ -2,9 +2,9 @@ package me.fourteendoggo.mathexpressionparser.symbol;
 
 import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
+import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 
 import java.util.Arrays;
-import java.util.function.Supplier;
 
 /**
  * An efficient lookup tree for {@link Symbol}s.
@@ -12,22 +12,19 @@ import java.util.function.Supplier;
 public class SymbolLookup {
     private static final byte INVALID_IDX = Byte.MAX_VALUE;
     /** Last included ascii char of the range that {@link SymbolLookup#indexLookup} encompasses */
-    private static final char MAX_RANGE_CHAR = 'z'; // (ascii value 122, 0x7A)
+    private static final char MAX_RANGE_CHAR = 'z'; // decimal 122
     /**
-     * Stores indices into every {@link Node}'s children table, for the continuous ascii range that starts
-     * at '\0' (NUL) and consists of the only valid ranges '0'..'9', 'A'..'Z' and 'a'..'z' (in that order).
-     * <p>The fact that the range starts at '\0' means we store a leading range that is useless to us, as we only
-     * really need to start at '0', this to avoid an extra start bounds check for inclusion of a certain character.
-     * <p>Note: we also store useless ranges in between useful ranges to us, f.e. in between 'A'..'Z' and 'a'..'z',
-     * all these useless positions are filled with {@link SymbolLookup#INVALID_IDX}, which is clearly invalid because it is
-     * bigger than {@link Node#CHILDREN_WIDTH}.
-     * <p>
-     * Every index into this table is a character cast to an int, as per java requirements.
+     * Stores a mapping between characters and indices into a {@link Node}'s children table. Every index into this table
+     * is a character cast to an int. Every value is an absolute index into {@link Node#children}.
+     * <p>This table encompasses the continuous ascii range that starts
+     * at '\0' (NUL) and consists of the valid ranges '0'..'9', 'A'..'Z' and 'a'..'z' (in that order).
+     * All values that are not in those three ranges are considered useless and have the value {@link SymbolLookup#INVALID_IDX}.
+     * The fact that the whole range starts at '\0' is used to avoid an extra bounds check against the start index,
+     * this to benefit from the fact that java chars are unsigned.
      * <p>Example:
      * <pre>{@code
      *     char symbolChar = 'a';
      *     // note that we don't need a start range check, because indexLookup starts at 0
-     *     // this to benefit from the fact that java chars are unsigned.
      *     assert c <= MAX_RANGE_CHAR : "char is not contained within lookup table";
      *     int idx = indexLookup[c];
      *     assert idx != INVALID_IDX : "illegal char in symbol name";
@@ -46,9 +43,11 @@ public class SymbolLookup {
 
         Arrays.fill(indexLookup, INVALID_IDX);
 
-        /* relative start offsets for a certain range */
-        final byte UPPERCASE_RANGE_START_OFFSET = 10; // ascii idx 65, child idx 10
-        final byte LOWERCASE_RANGE_START_OFFSET = 26 + 10; // ascii idx 97, child idx 36
+        /* absolute start offsets into indexLookup; for a certain range */
+        /* (previous range start + previous range width) */
+        final byte UPPERCASE_RANGE_START_OFFSET = 10;
+        final byte UNDERSCORE_OFFSET = UPPERCASE_RANGE_START_OFFSET + 26;
+        final byte LOWERCASE_RANGE_START_OFFSET = UNDERSCORE_OFFSET + 1;
 
         for (char c = '0'; c <= '9'; c++) {
             indexLookup[c] = (byte) (c - '0');
@@ -56,22 +55,27 @@ public class SymbolLookup {
         for (char c = 'A'; c <= 'Z'; c++) {
             indexLookup[c] = (byte) (c - 'A' + UPPERCASE_RANGE_START_OFFSET);
         }
+        indexLookup['_'] = '_' - UNDERSCORE_OFFSET;
         for (char c = 'a'; c <= 'z'; c++) {
             indexLookup[c] = (byte) (c - 'a' + LOWERCASE_RANGE_START_OFFSET);
         }
     }
 
+    /**
+     * Inserts a symbol
+     * @throws SyntaxException when this symbol already exists.
+     */
     public void insert(Symbol symbol) {
-        Node node = root;
         char[] chars = symbol.getName().toCharArray();
+        Node node = root;
 
         for (int i = 0; i < chars.length - 1; i++) {
             char current = chars[i];
-            node = node.computeChildIfAbsent(current, () -> new Node(current));
+            node = node.getOrInsertChild(current);
         }
 
         char lastChar = chars[chars.length - 1];
-        Node lastNode = node.insert(lastChar, new ValueHoldingNode(lastChar, symbol));
+        Node lastNode = node.insertValue(lastChar, symbol);
         Assert.isFalse(lastNode instanceof ValueHoldingNode, "symbol %s was already inserted", symbol.getName());
     }
 
@@ -82,17 +86,14 @@ public class SymbolLookup {
      * @return a {@link Symbol} or null if not found.
      */
     public Symbol lookup(char[] buf, int pos) {
-        // NOTE: buf[pos] points to the first char of the symbol, which is already considered valid
-        // otherwise we wouldn't be here, no need for Utility.isValidIdentifierFirstChar()
-        Node node = root;
-        char current;
+        Node curr = root;
+        do {
+            int childIdx = indexLookup[buf[pos++]];
+            curr = curr.children[childIdx];
+            if (curr == null) return null;
+        } while (pos < buf.length && Utility.isValidIdentifierChar(buf[pos]));
 
-        while (pos < buf.length && Utility.isValidIdentifierChar(current = buf[pos++])) {
-            int childIdx = indexLookup[current];
-            node = node.children[childIdx];
-            if (node == null) return null;
-        }
-        if (node instanceof ValueHoldingNode valueNode) {
+        if (curr instanceof ValueHoldingNode valueNode) {
             return valueNode.symbol;
         }
         return null;
@@ -106,36 +107,37 @@ public class SymbolLookup {
     private static class Node {
         /**
          * Following the specification, the first char of an identifier must be alphabetical,
-         * all following characters must be alphanumerical.
+         * all following characters must be alphanumerical or an underscore.
          * We are wasting some child nodes in the root node, but those cannot (not even accidentally) be used,
          * as guaranteed by the respective insert or lookup method in {@link SymbolLookup}.
          */
-        private static final int CHILDREN_WIDTH = 10 + 26 + 26;
-        private final char value; // for debugging only
-        /* '0'..'9' 'A'..'Z' 'a'..'z' */
+        private static final int CHILDREN_WIDTH = 10 + 26 + 1 + 26;
+        /* '0'..'9' 'A'..'Z' '_' 'a'..'z' */
         private final Node[] children = new Node[CHILDREN_WIDTH];
+        private final char value; // for debugging only
 
         public Node(char value) {
             this.value = value;
         }
 
-        public Node computeChildIfAbsent(char value, Supplier<Node> supplier) {
-            int index = indexOrThrow(value);
-            if (children[index] == null) {
-                children[index] = supplier.get();
+        public Node getOrInsertChild(char value) {
+            int idx = indexOrThrow(value);
+            if (children[idx] == null) {
+                children[idx] = new Node(value);
             }
-            return children[index];
+            return children[idx];
         }
 
-        public Node insert(char value, Node node) {
+        public Node insertValue(char value, Symbol symbol) {
             int index = indexOrThrow(value);
             Node oldValue = children[index];
-            children[index] = node;
+            // TODO: insert children copy
+            children[index] = new ValueHoldingNode(value, symbol);
             return oldValue;
         }
 
         private static int indexOrThrow(char value) {
-            Assert.isTrue(value < MAX_RANGE_CHAR, "character %s is not allowed in a symbol name", value);
+            Assert.isTrue(value <= MAX_RANGE_CHAR, "character %s is not allowed in a symbol name", value);
             byte idx = indexLookup[value];
             Assert.isFalse(idx == INVALID_IDX, "character %s is not allowed in a symbol name", value);
             return idx;

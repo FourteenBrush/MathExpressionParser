@@ -30,27 +30,20 @@ public class Utility {
     }
 
     public static boolean isValidIdentifierFirstChar(char c) {
-        c |= ' '; // set lowercase bit
-        return c >= 'a' && c <= 'z';
+        return c >= 'a' && c <= 'z' || c == '_';
     }
 
-    // same as isValidIdentifierCharLowerCase but also handles uppercase chars
     public static boolean isValidIdentifierChar(char c) {
-        if (c >= '0' && c <= '9') return true;
+        if (c >= '0' && c <= '9' || c == '_') return true;
         c |= ' ';
         return (c >= 'a' && c <= 'z');
-    }
-
-    private static boolean isValidIdentifierCharLowerCase(char c) {
-        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
     }
 
     public static boolean isValidIdentifierName(String name) {
         if (name.isEmpty() || !isValidIdentifierFirstChar(name.charAt(0))) return false;
         for (int i = 1; i < name.length(); i++) {
-            // numbers are immune to OR ' '
-            char c = (char) (name.charAt(i) | ' ');
-            if (!isValidIdentifierCharLowerCase(c)) return false;
+            char c = name.charAt(i);
+            if (!isValidIdentifierChar(c)) return false;
         }
         return true;
     }
@@ -75,16 +68,8 @@ public class Utility {
         return x == 0 ? 1 : 0;
     }
 
-    public static boolean isLowercaseLetter(int c) {
-        return c >= 'a' && c <= 'z';
-    }
-
     public static boolean isValidArgument(int c) {
         return c != ',' && c != ')';
-    }
-
-    public static boolean isBetweenBrackets(int c) {
-        return c != ')';
     }
 
     public static int gcd(int a, int b) {

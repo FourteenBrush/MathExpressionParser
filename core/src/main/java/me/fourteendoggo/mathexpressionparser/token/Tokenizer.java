@@ -16,7 +16,7 @@ public class Tokenizer {
     private final char[] source;
     private final ExecutionEnv env;
     private final Expression expr = new Expression();
-    // indicates whether we should keep processing character
+    // indicates whether we should keep processing characters
     // e.g. to implement sub-tokenizers
     private final IntPredicate loopCondition;
     private int pos;
@@ -30,6 +30,10 @@ public class Tokenizer {
         this.env = env;
         this.loopCondition = loopCondition;
     }
+
+    /*
+    NOTE: usage of x_2 where x_ is a variable is not supported, if you expect x_*2, specify it explicitly
+     */
 
     public Expression readTokens() {
         while (hasRemaining()) {
@@ -73,7 +77,7 @@ public class Tokenizer {
                     expr.pushToken(Operator.EQUALS);
                 }
                 case 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-                     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' -> {
+                     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_' -> {
                     // support for things like 2cos(1) -> 2 * cos(1)
                     if (expr.getLastType() == TokenType.OPERAND) {
                         expr.pushToken(Operator.MULTIPLICATION);
@@ -109,14 +113,14 @@ public class Tokenizer {
                         Tokenizer tokenizer = branchOff(loopCondition, pos);
                         double toBeNegated = tokenizer.readTokens().solve();
                         pos = tokenizer.pos;
-                        expr.pushToken(new Operand(Utility.boolNot(toBeNegated)));
+                        expr.pushToken(Utility.boolNot(toBeNegated));
                     }
                 }
                 case '~' -> { // one of the highest priority operators, can be solved immediately
                     Tokenizer tokenizer = branchOff(loopCondition, pos);
                     int input = Utility.requireInt(tokenizer.readTokens().solve());
                     pos = tokenizer.pos;
-                    expr.pushToken(new Operand(~input));
+                    expr.pushToken(~input);
                 }
                 default -> throw new SyntaxException("unexpected character " + current);
             }
@@ -126,12 +130,12 @@ public class Tokenizer {
 
     private void pushNegativeOperand() {
         double value = -readDouble('0', false);
-        expr.pushToken(new Operand(value));
+        expr.pushToken(value);
     }
 
     private void pushOperand(char initialChar) {
         double value = readDouble(initialChar, true);
-        expr.pushToken(new Operand(value));
+        expr.pushToken(value);
     }
 
     /**
@@ -168,7 +172,7 @@ public class Tokenizer {
         }
         if (!readNumber) {
             // support for function calls of form -func()
-            Assert.isTrue(Utility.isLowercaseLetter(currentOrDefault()), "expected a number");
+            Assert.isTrue(Utility.isValidIdentifierFirstChar(currentOrDefault()), "expected a number");
             return 1; // pushNegativeOperand() inverts this, so we're actually returning -1
         }
         return result;
@@ -274,7 +278,7 @@ public class Tokenizer {
     }
 
     private Operand readBrackets() {
-        Tokenizer tokenizer = branchOff(Utility::isBetweenBrackets, pos); // enter expression
+        Tokenizer tokenizer = branchOff(c -> c != ')', pos); // enter expression
         Operand result = new Operand(tokenizer.readTokens().solve());
 
         Assert.isTrue(tokenizer.currentOrDefault() == ')', "missing closing parenthesis");
@@ -297,8 +301,8 @@ public class Tokenizer {
         String functionName = desc.getName();
         matchOrThrow('(', "missing opening parenthesis for function %s", functionName);
 
-        FunctionContext parameters = desc.allocateParameters();
         char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call %s", functionName);
+        FunctionContext parameters = desc.allocateParameters();
         if (maybeClosingParenthesis != ')') { // arguments were provided
             // TODO: when calling f.e. exit( ), the space gets interpreted as parameters too
             Assert.isTrue(desc.supportsArgs(), "did not expect any parameters for function %s", functionName);
@@ -308,6 +312,7 @@ public class Tokenizer {
             parameters.add(paramTokenizer.readTokens().solve());
 
             while (paramTokenizer.currentOrDefault() == ',') {
+                // TODO: can we reuse the tokenizer?
                 paramTokenizer = paramTokenizer.branchOff(Utility::isValidArgument, paramTokenizer.pos + 1); // + 1 to consume comma
                 parameters.add(paramTokenizer.readTokens().solve());
             }

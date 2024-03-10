@@ -12,6 +12,13 @@ public class Expression {
     private TokenType lastType = TokenType.OPERATOR; // need to assure incoming type is different from the current one
     private int numCalculations;
 
+    /**
+     * Pushes an {@link Operand}
+     */
+    public void pushToken(double value) {
+        pushToken(new Operand(value));
+    }
+
     public void pushToken(Token token) {
         checkType(token.getType());
         lastType = token.getType();

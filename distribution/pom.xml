@@ -17,7 +17,7 @@
         </dependency>
         <dependency>
             <groupId>me.fourteendoggo</groupId>
-            <artifactId>cli</artifactId>
+            <artifactId>repl</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
