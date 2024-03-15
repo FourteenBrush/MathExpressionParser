@@ -119,7 +119,7 @@ public class ExecutionEnv {
         Symbol symbol = symbolLookup.lookup(buf, pos);
         if (symbol == null) {
             String bufAsStr = new String(buf, pos, buf.length - pos);
-            String symbolName = INVERSE_IDENTIFIER_PATTERN.split(bufAsStr, 1)[0];
+            String symbolName = INVERSE_IDENTIFIER_PATTERN.split(bufAsStr, 2)[0];
             throw new SymbolNotFoundException(symbolName);
         }
         return symbol;
