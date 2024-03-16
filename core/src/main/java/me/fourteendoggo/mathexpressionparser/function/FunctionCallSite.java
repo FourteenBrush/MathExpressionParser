@@ -47,7 +47,7 @@ public class FunctionCallSite implements Symbol {
     }
 
     public FunctionContext allocateParameters() {
-        return new FunctionContext(16);
+        return new FunctionContext();
     }
 
     public double apply(FunctionContext context) {
