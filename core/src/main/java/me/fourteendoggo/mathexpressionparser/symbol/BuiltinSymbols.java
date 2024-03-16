@@ -29,9 +29,11 @@ abstract class BuiltinSymbols {
         env.insertFunction("tanh", Math::tanh);
         env.insertFunction("sqrt", Math::sqrt);
         env.insertFunction("cbrt", Math::cbrt);
+        env.insertFunction("signum", Math::signum);
 
         env.insertFunction("pow", Math::pow);
         env.insertFunction("log", Math::log);
+        env.insertFunction("log10", Math::log10);
         env.insertFunction("rad", Math::toRadians);
         env.insertFunction("floor", Math::floor);
         env.insertFunction("ceil", Math::ceil);
