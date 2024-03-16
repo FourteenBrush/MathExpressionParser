@@ -5,6 +5,7 @@ import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
 import me.fourteendoggo.mathexpressionparser.function.FunctionContext;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleSupplier;
@@ -21,7 +22,8 @@ import java.util.regex.Pattern;
  */
 public class ExecutionEnv {
     private static final Pattern INVERSE_IDENTIFIER_PATTERN = Pattern.compile("[^a-zA-Z_0-9]");
-    private final SymbolLookup symbolLookup;
+    @VisibleForTesting
+    final SymbolLookup symbolLookup;
 
     /**
      * @see ExecutionEnv#empty()

@@ -1,15 +1,16 @@
-package me.fourteendoggo.mathexpressionparser;
+package me.fourteendoggo.mathexpressionparser.symbol;
 
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
-import me.fourteendoggo.mathexpressionparser.symbol.Symbol;
-import me.fourteendoggo.mathexpressionparser.symbol.SymbolLookup;
-import me.fourteendoggo.mathexpressionparser.symbol.Variable;
+import me.fourteendoggo.mathexpressionparser.utils.Utility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Deque;
+import java.util.LinkedList;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SymbolLookupTest {
     private SymbolLookup lookup;
@@ -21,7 +22,26 @@ class SymbolLookupTest {
 
     @Test
     void testNodeLayout() {
-        lookup.
+        lookup = ExecutionEnv.createDefault().symbolLookup;
+        Deque<SymbolLookup.Node> stack = new LinkedList<>();
+        SymbolLookup.Node curr = lookup.root;
+        stack.push(curr);
+
+        while (!stack.isEmpty()) {
+            SymbolLookup.Node node = stack.pop();
+            for (SymbolLookup.Node child : node.children) {
+                if (child == null) continue;
+                stack.push(child);
+
+                int hasChildren = child.getData() >> SymbolLookup.Node.HAS_CHILDREN_SHIFT;
+                assertThat(hasChildren)
+                        .withFailMessage("upper byte of Node.value must only be used to indicate used children")
+                        .isIn(SymbolLookup.Node.HAS_CHILDREN, 0);
+
+                char value = child.getCharacter();
+                assertTrue(Utility.isValidIdentifierChar(value));
+            }
+        }
     }
 
     @Test

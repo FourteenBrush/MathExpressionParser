@@ -110,6 +110,7 @@ public class Tokenizer {
                         advance();
                         expr.pushToken(Operator.NOT_EQUALS);
                     } else { // one of the highest priority operators, can be solved immediately
+                        // TODO: outline
                         Tokenizer tokenizer = branchOff(loopCondition, pos);
                         double toBeNegated = tokenizer.readTokens().solve();
                         pos = tokenizer.pos;
@@ -117,6 +118,7 @@ public class Tokenizer {
                     }
                 }
                 case '~' -> { // one of the highest priority operators, can be solved immediately
+                    // TODO: outline
                     Tokenizer tokenizer = branchOff(loopCondition, pos);
                     int input = Utility.requireInt(tokenizer.readTokens().solve());
                     pos = tokenizer.pos;
@@ -303,19 +305,17 @@ public class Tokenizer {
 
         char maybeClosingParenthesis = currentOrThrow("missing closing parenthesis for function call %s", functionName);
         FunctionContext parameters = desc.allocateParameters();
-        if (maybeClosingParenthesis != ')') { // arguments were provided
+
+        if (maybeClosingParenthesis != ')') { // parameters were provided
             // TODO: when calling f.e. exit( ), the space gets interpreted as parameters too
-            Assert.isTrue(desc.supportsArgs(), "did not expect any parameters for function %s", functionName);
+            Assert.isTrue(desc.supportsArgs(), "function %s did not expect any parameters", functionName);
 
-            // do while doesn't really work here due to that + 1
-            Tokenizer paramTokenizer = branchOff(Utility::isValidArgument, pos);
-            parameters.add(paramTokenizer.readTokens().solve());
-
-            while (paramTokenizer.currentOrDefault() == ',') {
-                // TODO: can we reuse the tokenizer?
-                paramTokenizer = paramTokenizer.branchOff(Utility::isValidArgument, paramTokenizer.pos + 1); // + 1 to consume comma
+            // TODO: can we reuse the tokenizer and avoid an extra allocation per parameter?
+            Tokenizer paramTokenizer = this;
+            do {
+                paramTokenizer = paramTokenizer.branchOff(Utility::isValidArgument, paramTokenizer.pos);
                 parameters.add(paramTokenizer.readTokens().solve());
-            }
+            } while (paramTokenizer.match(','));
             pos = paramTokenizer.pos; // move to ')' (or something else if there's an error)
         }
         matchOrThrow(')', "missing closing parenthesis for function %s", functionName);

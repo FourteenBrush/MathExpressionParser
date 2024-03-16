@@ -23,8 +23,8 @@ public interface Assert {
         }
     }
 
-    static void indexWithinBounds(int index, int size, String message, Object... placeholders) {
-        if (index < 0 || index >= size) {
+    static void indexWithinBounds(int idx, int size, String message, Object... placeholders) {
+        if (idx < 0 || idx >= size) {
             throw new IndexOutOfBoundsException(message.formatted(placeholders));
         }
     }

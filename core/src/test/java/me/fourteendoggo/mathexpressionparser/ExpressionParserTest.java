@@ -3,7 +3,6 @@ package me.fourteendoggo.mathexpressionparser;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import me.fourteendoggo.mathexpressionparser.symbol.ExecutionEnv;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
@@ -24,7 +23,6 @@ class ExpressionParserTest {
     void testPositiveTestCases(String expression, String expectedResult) {
         double expected = ExpressionParser.parse(expectedResult);
         double result = assertDoesNotThrow(() -> ExpressionParser.parse(expression));
-        // delta 0 to make 0.0 == -0.0 pass, junit uses Double.doubleToLongBits for comparison
         assertThat(result)
                 .withFailMessage("%s: got %f instead of %f", expression, result, expected)
                 .isEqualTo(expected);
@@ -47,14 +45,13 @@ class ExpressionParserTest {
         assertThatThrownBy(() -> ExpressionParser.parse("")).isInstanceOf(SyntaxException.class);
     }
 
-    @Test
-    @Disabled // TODO: fix #1
+    @Test // was an issue in #1
     void reproduce() {
         ExecutionEnv env = ExecutionEnv.empty();
         env.insertVariable("xy", 1);
         env.insertVariable("x", 2);
         env.insertVariable("y", 3);
-        assertThat(ExpressionParser.parse("xy", env)).isEqualTo(1); // "xy" not found
+        assertThat(ExpressionParser.parse("xy", env)).isEqualTo(1);
         assertThat(ExpressionParser.parse("x", env)).isEqualTo(2);
         assertThat(ExpressionParser.parse("y", env)).isEqualTo(3);
     }
@@ -75,12 +72,11 @@ class ExpressionParserTest {
 
         assertThatThrownBy(() -> ExpressionParser.parse("a_00__1____", env)).isInstanceOf(SyntaxException.class);
 
-        // TODO: #1
         String[] identifiers = {
-                "aa", "lA", /*"z_",  "z9" , */
-                "u0pz"/*,"zAA", "zZ_" */, "_E01",
+                "aa", "lA", "z_",  "z9" ,
+                "u0pz","zAA", "zZ_", "_E01",
                 "__z", "_UXs", "___Az0", "_01_9z",
-                "i", "z"/*, "_"*/, "e0", "t"/*, "__", "_0"*/
+                "i", "z", "_", "e0", "t", "__", "_0"
         };
 
         for (String ident : identifiers) {

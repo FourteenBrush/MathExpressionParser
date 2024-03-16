@@ -16,11 +16,11 @@ public class Utility {
         return (int) Math.pow(10, exponent);
     }
 
-    public static String getOrdinalName(int index) {
-        if (index < COMMON_ORDINAL_NAMES.length) {
-            return COMMON_ORDINAL_NAMES[index];
+    public static String getOrdinalName(int idx) {
+        if (idx < COMMON_ORDINAL_NAMES.length) {
+            return COMMON_ORDINAL_NAMES[idx];
         }
-        return (index + 1) + "th";
+        return (idx + 1) + "th";
     }
 
     public static int requireInt(double x) {
