@@ -20,6 +20,11 @@ class SymbolLookupTest {
     }
 
     @Test
+    void testNodeLayout() {
+        lookup.
+    }
+
+    @Test
     void testVariableLookup() {
         Symbol boolTrue = new Variable("t", 1);
         char[] buf = "t + 1".toCharArray();

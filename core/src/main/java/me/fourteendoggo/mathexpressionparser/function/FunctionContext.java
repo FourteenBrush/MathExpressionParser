@@ -15,6 +15,13 @@ public class FunctionContext {
     private int size;
 
     /**
+     * @see #FunctionContext(int)
+     */
+    FunctionContext() {
+        this(16);
+    }
+
+    /**
      * Creates a new FunctionContext with a given initial capacity for holding parameters
      * @param initialCapacity the initial capacity
      */
@@ -48,21 +55,21 @@ public class FunctionContext {
     /**
      * @see #getUnsignedInt(int, int)
      */
-    public int getUnsignedInt(int index) {
-        return getUnsignedInt(index, Integer.MAX_VALUE);
+    public int getUnsignedInt(int idx) {
+        return getUnsignedInt(idx, Integer.MAX_VALUE);
     }
 
     /**
      * Either returns an unsigned int or fails.
      * @see #getBoundedInt(int, int, int)
      */
-    public int getUnsignedInt(int index, int max) {
-        return getBoundedInt(index, 0, max);
+    public int getUnsignedInt(int idx, int max) {
+        return getBoundedInt(idx, 0, max);
     }
 
     /**
      * Converts a parameter to an integer, ensuring no precision loss occurs and that the value falls within the specified range.
-     * @param index the index of the parameter
+     * @param idx the index of the parameter
      * @param min the minimum value that the integer is expected to be
      * @param max the maximum value the integer is expected to be
      * @return the parameter at that position
@@ -70,11 +77,11 @@ public class FunctionContext {
      * or if the value doesn't fall within the specified range
      * @see #getInt(int)
      */
-    public int getBoundedInt(int index, int min, int max) {
-        int value = getInt(index);
+    public int getBoundedInt(int idx, int min, int max) {
+        int value = getInt(idx);
         if (value < min || value > max) {
             throw new SyntaxException("expected an integer between %s and %s as %s argument, got %s",
-                    min, max, Utility.getOrdinalName(index), value);
+                    min, max, Utility.getOrdinalName(idx), value);
         }
         return value;
     }
@@ -84,11 +91,11 @@ public class FunctionContext {
      * @throws SyntaxException if any precision loss occurs while casting {@link #getDouble(int)} to an integer
      * @see #getDouble(int)
      */
-    public int getInt(int index) {
-        double value = getDouble(index);
+    public int getInt(int idx) {
+        double value = getDouble(idx);
         int intValue = (int) value;
         if (intValue != value) {
-            throw new SyntaxException("expected an integer as %s argument, got %s", Utility.getOrdinalName(index), value);
+            throw new SyntaxException("expected an integer as %s argument, got %s", Utility.getOrdinalName(idx), value);
         }
         return intValue;
     }
@@ -96,44 +103,44 @@ public class FunctionContext {
     /**
      * @see #getUnsignedDouble(int, double)
      */
-    public double getUnsignedDouble(int index) {
-        return getBoundedDouble(index, 0, Double.MAX_VALUE);
+    public double getUnsignedDouble(int idx) {
+        return getBoundedDouble(idx, 0, Double.MAX_VALUE);
     }
 
     /**
      * Either returns an unsigned double or fails.
      * @see #getBoundedDouble(int, double, double)
      */
-    public double getUnsignedDouble(int index, double max) {
-        return getBoundedDouble(index, 0, max);
+    public double getUnsignedDouble(int idx, double max) {
+        return getBoundedDouble(idx, 0, max);
     }
 
     /**
      * Returns a parameter, ensuring that it falls within the specified range.
-     * @param index the index of the parameter
+     * @param idx the index of the parameter
      * @param min the minimum value that the parameter is expected to be
      * @param max the maximum value the parameter is expected to be
      * @return the parameter at that position
      * @throws SyntaxException if the value doesn't fall within the specified range
      */
-    public double getBoundedDouble(int index, double min, double max) {
-        double value = getDouble(index);
+    public double getBoundedDouble(int idx, double min, double max) {
+        double value = getDouble(idx);
         if (value < min || value > max) {
-            throw new SyntaxException("expected a value between %s and %s as %s argument, got %s", Utility.getOrdinalName(index), value);
+            throw new SyntaxException("expected a value between %s and %s as %s argument, got %s", Utility.getOrdinalName(idx), value);
         }
         return value;
     }
 
     /**
-     * @param index the index, between 0 and {@link #size()} - 1
+     * @param idx the index, between 0 and {@link #size()} - 1
      * @return the parameter at the given index
      */
-    public double getDouble(int index) {
+    public double getDouble(int idx) {
         Assert.indexWithinBounds(
-                index, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
-                index, size
+                idx, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
+                idx, size
         );
-        return parameters[index];
+        return parameters[idx];
     }
 
     @Override
