@@ -1,8 +1,10 @@
 package me.fourteendoggo.mathexpressionparser.symbol;
 
+import me.fourteendoggo.mathexpressionparser.function.FunctionCallSite;
+
 public enum SymbolType {
     /**
-     * @see me.fourteendoggo.mathexpressionparser.function.FunctionCallSite
+     * @see FunctionCallSite
      */
     FUNCTION,
     /**
