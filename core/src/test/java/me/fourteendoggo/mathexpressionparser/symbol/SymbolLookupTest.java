@@ -81,4 +81,13 @@ class SymbolLookupTest {
     void testInsertingInvalidNamesThrows() {
         assertThrows(SyntaxException.class, () -> lookup.insert(new FunctionCallSite("@pi", 0, ctx -> Math.PI)));
     }
+
+    @Test
+    void testRetrievalOfPartialNames() {
+        lookup.insert(new Variable("mi", 3.4));
+        Symbol s = lookup.lookup("m".toCharArray(), 0);
+        assertThat(s).isNull();
+
+        assertThat(lookup.lookup("xmi aa".toCharArray(), 1)).isNotNull();
+    }
 }

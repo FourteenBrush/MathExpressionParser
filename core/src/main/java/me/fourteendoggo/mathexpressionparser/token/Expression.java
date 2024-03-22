@@ -112,31 +112,21 @@ public class Expression {
             if (next != null) {
                 // we can only solve 'current' if its operator priority is higher than or equal to the next's operator priority
                 if (!current.mayExecuteFirst()) continue;
-                // at this point we want to unlink 'current'
-                // prepare to remove 'current' from the list, this means placing its solved value in next.left and prev.right
-                double solvedValue = current.solve();
+                // unlink current
                 LinkedCalculation prev = current.prev;
                 // {2+3}<->{3*4}<->{12+2}
-                next.left.setValue(solvedValue);
+                next.left.setValue(current.solve());
                 next.prev = prev; // remove traces to us on next
                 numCalculations--;
                 // we may have a left neighbour which didn't get executed yet because its operator priority is lower than ours
                 if (prev == null) {
                     // looks like we are head, and we are about to be unlinked, change head to next
                     head = next;
-                    continue;
                 }
-
-                // {2+12}<->{3*4}<->{4+2}
-                prev.right.setValue(solvedValue);
-                prev.next = next; // remove traces of us on prev
-                // prev.next points to next
-                // next.prev points to current.prev
             } else if (current.prev != null) {
                 // current refers to the tail
                 // append our value to prev.right
-                double solvedValue = current.solve();
-                current.prev.right.setValue(solvedValue);
+                current.prev.right.setValue(current.solve());
                 // unlink current
                 current.prev.next = null;
                 numCalculations--;

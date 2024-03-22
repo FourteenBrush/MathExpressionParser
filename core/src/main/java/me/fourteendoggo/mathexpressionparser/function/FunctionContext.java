@@ -122,11 +122,15 @@ public class FunctionContext {
      * @param max the maximum value the parameter is expected to be
      * @return the parameter at that position
      * @throws SyntaxException if the value doesn't fall within the specified range
+     * @throws IllegalArgumentException if min > max
      */
     public double getBoundedDouble(int idx, double min, double max) {
+        if (min > max) {
+            throw new IllegalArgumentException("min > max, function definition is set up incorrectly");
+        }
         double value = getDouble(idx);
         if (value < min || value > max) {
-            throw new SyntaxException("expected a value between %s and %s as %s argument, got %s", Utility.getOrdinalName(idx), value);
+            throw new SyntaxException("expected a value between %s and %s as %s argument, got %s", min, max, Utility.getOrdinalName(idx), value);
         }
         return value;
     }
@@ -134,10 +138,12 @@ public class FunctionContext {
     /**
      * @param idx the index, between 0 and {@link #size()} - 1
      * @return the parameter at the given index
+     * @throws IndexOutOfBoundsException if the index violates the min/max arguments of the
+     * associated {@link FunctionCallSite}, meaning this call is set up wrongly.
      */
     public double getDouble(int idx) {
         Assert.indexWithinBounds(
-                idx, size, "index %s is out of bounds for size %s, function definition is probably set up wrongly",
+                idx, size, "index %s is out of bounds for size %s, function definition is set up incorrectly",
                 idx, size
         );
         return parameters[idx];

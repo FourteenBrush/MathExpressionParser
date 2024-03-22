@@ -166,7 +166,7 @@ public class SymbolLookup {
             return oldValue;
         }
 
-        boolean hasChildren() {
+        private boolean hasChildren() {
             return data >> HAS_CHILDREN_SHIFT == HAS_CHILDREN;
         }
 
