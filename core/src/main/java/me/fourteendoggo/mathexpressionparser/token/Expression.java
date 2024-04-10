@@ -94,7 +94,6 @@ public class Expression {
             }
             default -> {
                 while (numCalculations > 1) {
-                    // FIXME: decrement numCalculations?
                     shorten();
                 }
                 yield head.solve();

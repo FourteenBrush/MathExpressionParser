@@ -11,21 +11,21 @@ public interface Assert {
         }
     }
 
-    static void isFalse(boolean condition, String message, Object... placeholders) {
+    static void isFalse(boolean condition, String fmt, Object... placeholders) {
         if (condition) {
-            throw new SyntaxException(message, placeholders);
+            throw new SyntaxException(fmt, placeholders);
         }
     }
 
-    static void isTrue(boolean condition, String message, Object... placeholders) {
+    static void isTrue(boolean condition, String fmt, Object... placeholders) {
         if (!condition) {
-            throw new SyntaxException(message.formatted(placeholders));
+            throw new SyntaxException(fmt.formatted(placeholders));
         }
     }
 
-    static void indexWithinBounds(int idx, int size, String message, Object... placeholders) {
+    static void indexWithinBounds(int idx, int size, String fmt, Object... placeholders) {
         if (idx < 0 || idx >= size) {
-            throw new IndexOutOfBoundsException(message.formatted(placeholders));
+            throw new IndexOutOfBoundsException(fmt.formatted(placeholders));
         }
     }
 
