@@ -206,14 +206,14 @@ Scanner in = new Scanner(System.in);
 ExecutionEnv env = ExecutionEnv.createDefault();
 env.insertFunction("input", in::nextDouble);
 
-env.insertFunction("isleapyear", 1, ctx -> {
+env.insertFunction("isLeapYear", 1, ctx -> {
     // you need a FunctionContext parameter to force the input to be an int
     // as all parameters are doubles implicitly  
     int year = ctx.getInt(0);
     return Utility.boolToDouble(java.time.Year.isLeap(year));
 });
 
-double result = ExpressionParser.parse("isleapyear(input())", env);
+double result = ExpressionParser.parse("isLeapYear(input())", env);
 boolean isLeapYear = Utility.doubleToBool(result);
 ```
 
