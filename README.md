@@ -56,7 +56,7 @@ assert result == 12;
 ### Functions and variables
 
 There is built-in support for trigonometric, mathematical and other common functions, click
-[here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to seem them all.
+[here](core/src/main/java/me/fourteendoggo/mathexpressionparser/symbol/BuiltinSymbols.java) to see them all.
 
 Functions are called like normal Java methods, they can have zero or more parameters and can be nested:
 
