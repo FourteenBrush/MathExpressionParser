@@ -81,7 +81,7 @@ public class Expression {
 
                 Assert.notNull(second.right, "unexpected trailing operator");
 
-                if (first.mayExecuteFirst()) {
+                if (first.hasHigherPriority()) {
                     // f.e. 2*3+2
                     double firstOperand = first.solve();
                     double secondOperand = second.right.getValue();
@@ -93,9 +93,7 @@ public class Expression {
                 yield first.operator.apply(firstOperand, secondOperand);
             }
             default -> {
-                while (numCalculations > 1) {
-                    shorten();
-                }
+                shorten();
                 yield head.solve();
             }
         };
@@ -105,30 +103,30 @@ public class Expression {
      * Shortens a chain of calculations, leaves one calculation behind which can then be solved.
      */
     private void shorten() {
-        // lets take {2+3}<->{3*4}<->{4+2} as example (expression: 2+3*4+2) and {3*4} as current
-        for (LinkedCalculation current = head; current != null; current = current.next) {
-            LinkedCalculation next = current.next;
-            if (next != null) {
-                // we can only solve 'current' if its operator priority is higher than or equal to the next's operator priority
-                if (!current.mayExecuteFirst()) continue;
-                // unlink current
-                LinkedCalculation prev = current.prev;
-                // {2+3}<->{3*4}<->{12+2}
-                next.left.setValue(current.solve());
-                next.prev = prev; // remove traces to us on next
-                numCalculations--;
-                // we may have a left neighbour which didn't get executed yet because its operator priority is lower than ours
-                if (prev == null) {
-                    // looks like we are head, and we are about to be unlinked, change head to next
-                    head = next;
+        while (numCalculations > 1) {
+            for (LinkedCalculation current = head; current != null; current = current.next) {
+                LinkedCalculation next = current.next;
+                if (next != null) {
+                    // we can only solve 'current' if its operator priority is higher than or equal to the next's operator priority
+                    if (!current.hasHigherPriority()) continue;
+                    // unlink current
+                    LinkedCalculation prev = current.prev;
+                    next.left.setValue(current.solve());
+                    next.prev = prev; // remove traces to us on next
+                    numCalculations--;
+                    // we may have a left neighbour which didn't get executed yet because its operator priority is lower than ours
+                    if (prev == null) {
+                        // looks like we are head, and we are about to be unlinked, change head to next
+                        head = next;
+                    }
+                } else if (current.prev != null) {
+                    // current refers to the tail
+                    // append our value to prev.right
+                    current.prev.right.setValue(current.solve());
+                    // unlink current
+                    current.prev.next = null;
+                    numCalculations--;
                 }
-            } else if (current.prev != null) {
-                // current refers to the tail
-                // append our value to prev.right
-                current.prev.right.setValue(current.solve());
-                // unlink current
-                current.prev.next = null;
-                numCalculations--;
             }
         }
     }
@@ -179,7 +177,7 @@ public class Expression {
         }
 
         // we have a reference to the next calculation so no need to implement Comparable<LinkedCalculation>
-        public boolean mayExecuteFirst() {
+        public boolean hasHigherPriority() {
             return operator.getPriority() >= next.operator.getPriority();
         }
 
