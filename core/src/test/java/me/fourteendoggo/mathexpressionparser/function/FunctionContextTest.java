@@ -40,4 +40,16 @@ class FunctionContextTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("set up incorrectly");
     }
+
+    @Test
+    void testStream() {
+        ctx.add(2.3);
+        ctx.add(1.2);
+        assertThat(ctx.stream().toArray()).containsExactly(2.3, 1.2);
+    }
+
+    @Test
+    void testEmptyStream() {
+        assertThat(ctx.stream().toArray()).isEmpty();
+    }
 }

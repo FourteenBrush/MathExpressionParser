@@ -5,6 +5,7 @@ import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 
 import java.util.Arrays;
+import java.util.stream.DoubleStream;
 
 // FIXME: implement PrimitiveIterator.OfDouble maybe?
 /**
@@ -147,6 +148,10 @@ public class FunctionContext {
                 idx, size
         );
         return parameters[idx];
+    }
+
+    public DoubleStream stream() {
+        return Arrays.stream(parameters, 0, size);
     }
 
     @Override
