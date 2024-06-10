@@ -20,7 +20,6 @@
     </modules>
     <build>
         <plugins>
-            <!-- TODO: that silly ..version in conjunction with source 17 still exists -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
