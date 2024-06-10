@@ -25,11 +25,7 @@ public class ExecutionEnv {
     @VisibleForTesting
     final SymbolLookup symbolLookup;
 
-    /**
-     * @see ExecutionEnv#empty()
-     */
-    @Deprecated(forRemoval = true)
-    public ExecutionEnv() {
+    private ExecutionEnv() {
         symbolLookup = new SymbolLookup();
     }
 
