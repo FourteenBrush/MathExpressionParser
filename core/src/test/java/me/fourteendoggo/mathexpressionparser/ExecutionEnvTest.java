@@ -5,7 +5,7 @@ import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.*;
 
 // TODO
 public class ExecutionEnvTest {
@@ -18,14 +18,24 @@ public class ExecutionEnvTest {
 
     @Test
     void ensureNonExistentFunctionsDontExist() {
-        String[] nonExistentFunctions = new String[] {
+        String[] nonExistentFunctions = new String[]{
                 "some_weird_function",
                 "some_other_function",
                 "some_other_other_function",
         };
 
         for (String function : nonExistentFunctions) {
-            assertThatCode(() -> ExpressionParser.parse(function + "()", env)).isInstanceOf(SyntaxException.class);
+            assertThatThrownBy(() -> ExpressionParser.parse(function + "()", env)).isInstanceOf(SyntaxException.class);
         }
+    }
+
+    @Test
+    void ensureThrowingOnAlreadyExistentSymbolKeepsStateConsistent() {
+        env.insertFunction("a", () -> 1);
+
+        assertThatThrownBy(() -> env.insertFunction("a", () -> 3))
+                .isInstanceOf(SyntaxException.class);
+
+        assertThat(ExpressionParser.parse("a()", env)).isEqualTo(1);
     }
 }
