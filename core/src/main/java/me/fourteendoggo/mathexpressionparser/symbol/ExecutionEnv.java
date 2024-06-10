@@ -30,19 +30,18 @@ public class ExecutionEnv {
     }
 
     /**
-     * Creates an empty {@link ExecutionEnv}, no symbols are bound.
+     * @return an empty {@link ExecutionEnv}, no symbols are bound.
      */
     public static ExecutionEnv empty() {
         return new ExecutionEnv();
     }
 
     /**
-     *
      * @return a {@link ExecutionEnv} populated with all default symbols.
      */
     @ApiStatus.Experimental
     public static ExecutionEnv createDefault() {
-        // delegate to BuiltinSymbols to not clutter this class
+        // delegate to BuiltinSymbols to not clutter up this class
         return BuiltinSymbols.createExecutionEnv();
     }
 
@@ -87,10 +86,11 @@ public class ExecutionEnv {
 
     /**
      * Inserts a function with a certain amount of parameters, which correspond to parameters in the function context.
-     * @param name the function name
+     *
+     * @param name    the function name
      * @param minArgs the minimum amount of arguments
      * @param maxArgs the maximum amount of arguments
-     * @param fn the function
+     * @param fn      the function
      */
     public void insertFunction(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
         insertSymbol(new FunctionCallSite(name, minArgs, maxArgs, fn));
@@ -98,6 +98,7 @@ public class ExecutionEnv {
 
     /**
      * Inserts a symbol into this environment.
+     *
      * @param symbol the symbol to be inserted.
      * @throws SyntaxException if the symbol was already inserted, either as a function or as a variable.
      */
@@ -107,6 +108,7 @@ public class ExecutionEnv {
 
     /**
      * Looks up a symbol based on an input
+     *
      * @param buf the input as a char array
      * @param pos the position to start searching at
      * @return the found symbol
