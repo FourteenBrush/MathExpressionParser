@@ -46,7 +46,7 @@ class ExpressionParserTest {
     }
 
     @Test // was an issue in #1
-    void reproduce() {
+    void maintainNodeSubtreeWhenPromotingCommonParent() {
         ExecutionEnv env = ExecutionEnv.empty();
         env.insertVariable("xy", 1);
         env.insertVariable("x", 2);
@@ -73,7 +73,7 @@ class ExpressionParserTest {
         assertThatThrownBy(() -> ExpressionParser.parse("a_00__1____", env)).isInstanceOf(SyntaxException.class);
 
         String[] identifiers = {
-                "aa", "lA", "z_",  "z9" ,
+                "aa", "lA", "z_",  "z9",
                 "u0pz","zAA", "zZ_", "_E01",
                 "__z", "_UXs", "___Az0", "_01_9z",
                 "i", "z", "_", "e0", "t", "__", "_0"
