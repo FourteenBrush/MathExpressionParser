@@ -9,7 +9,7 @@ public class Main {
     private static boolean running = true;
 
     public static void main(String[] args) {
-        ExecutionEnv env = ExecutionEnv.createDefault();
+        ExecutionEnv env = ExecutionEnv.defaulted();
         env.insertFunction("exit", () -> {
             running = false;
             return 0;

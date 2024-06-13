@@ -14,6 +14,7 @@ import java.util.function.ToDoubleFunction;
 import java.util.regex.Pattern;
 
 // TODO: add support for removing/ inserting if absent
+// TODO: overloads for ifAbsent
 
 /**
  * An environment instance, to which symbols can be bound.
@@ -40,7 +41,7 @@ public class ExecutionEnv {
      * @return a {@link ExecutionEnv} populated with all default symbols.
      */
     @ApiStatus.Experimental
-    public static ExecutionEnv createDefault() {
+    public static ExecutionEnv defaulted() {
         // delegate to BuiltinSymbols to not clutter up this class
         return BuiltinSymbols.createExecutionEnv();
     }

@@ -96,6 +96,6 @@ public class ExpressionParser {
     }
 
     static class DefaultEnvHolder {
-        static final ExecutionEnv DEFAULT_ENV = ExecutionEnv.createDefault();
+        static final ExecutionEnv DEFAULT_ENV = ExecutionEnv.defaulted();
     }
 }
