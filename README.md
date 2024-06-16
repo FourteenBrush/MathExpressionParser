@@ -9,7 +9,7 @@ A lightweight Java library for parsing and evaluating mathematical expressions.
 
 ## Dependency
 
-Don't forget to replace `Tag` with the appropriate version, which you can find on the
+Replace `Tag` with the appropriate version, which you can find on the
 [releases page](https://github.com/FourteenBrush/MathExpressionParser/releases) or on top of this file.
 
 ### Maven:
