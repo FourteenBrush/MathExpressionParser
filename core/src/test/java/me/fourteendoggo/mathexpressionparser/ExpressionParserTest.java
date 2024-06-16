@@ -31,7 +31,7 @@ class ExpressionParserTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/negative-input.csv")
     void testNegativeTestCases(String expression) {
-        assertThatCode(() -> ExpressionParser.parse(expression))
+        assertThatThrownBy(() -> ExpressionParser.parse(expression))
                 .withFailMessage(expression)
                 .isInstanceOf(SyntaxException.class);
     }
@@ -152,8 +152,8 @@ class ExpressionParserTest {
 
         assertThat(ExpressionParser.parse("~1")).isEqualTo(~1);
         assertThat(ExpressionParser.parse("~0")).isEqualTo(~0);
-        assertThatCode(() -> ExpressionParser.parse("~-1.5")).isInstanceOf(SyntaxException.class);
-        assertThatCode(() -> ExpressionParser.parse("~2.3")).isInstanceOf(SyntaxException.class);
+        assertThatThrownBy(() -> ExpressionParser.parse("~-1.5")).isInstanceOf(SyntaxException.class);
+        assertThatThrownBy(() -> ExpressionParser.parse("~2.3")).isInstanceOf(SyntaxException.class);
         assertThat(ExpressionParser.parse("~8")).isEqualTo(~8);
         assertThat(ExpressionParser.parse("~(2+~9)")).isEqualTo(~(2+~9));
 
