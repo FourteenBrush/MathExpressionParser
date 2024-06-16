@@ -33,7 +33,7 @@ public class SymbolLookup {
      *     int idx = indexLookup[c];
      *     assert idx != INVALID_IDX : "illegal char in symbol name";
      *     Node child = root.children[idx];
-     *     assert child.value == symbolChar;
+     *     assert child.getCharacter() == symbolChar;
      * }</pre>
      */
     private static final byte[] indexLookup = new byte[MAX_RANGE_CHAR + 1]; // 123
@@ -70,6 +70,21 @@ public class SymbolLookup {
      * @throws SyntaxException when this symbol is already inserted.
      */
     public void insert(Symbol symbol) {
+        putVal(symbol, true);
+    }
+
+    /**
+     * Inserts a symbol if it is not already present.
+     *
+     * @return the precious symbol if it was present, or null.
+     */
+    public Symbol insertIfAbsent(Symbol symbol) {
+        Node lastNode = putVal(symbol, false);
+        return (lastNode instanceof ValueHoldingNode node) ? node.symbol : null;
+    }
+
+    // returns the last node
+    private Node putVal(Symbol symbol, boolean expectUnoccupied) {
         String name = symbol.getName();
         Node node = root;
 
@@ -78,8 +93,7 @@ public class SymbolLookup {
         }
 
         char lastChar = name.charAt(name.length() - 1);
-        Node lastNode = node.insertValue(lastChar, symbol);
-        Assert.isFalse(lastNode instanceof ValueHoldingNode, "symbol %s was already inserted", name);
+        return node.insertValueChild(lastChar, symbol, expectUnoccupied);
     }
 
     /**
@@ -149,19 +163,28 @@ public class SymbolLookup {
         private Node getOrInsertChild(char value) {
             int idx = indexOrThrow(value);
             Node child = children[idx];
+
             if (child == null) {
                 child = children[idx] = new Node(value);
+                this.data |= (HAS_CHILDREN << HAS_CHILDREN_SHIFT);
             }
             return child;
         }
 
-        private Node insertValue(char value, Symbol symbol) {
+        private Node insertValueChild(char value, Symbol symbol, boolean expectUnoccupied) {
             int idx = indexOrThrow(value);
             Node oldValue = children[idx];
 
+            if (!expectUnoccupied) return oldValue;
+
+            if (oldValue instanceof ValueHoldingNode) {
+                throw new SyntaxException("symbol %s is already inserted", symbol.getName());
+            }
+
             children[idx] = oldValue != null
-                    ? new ValueHoldingNode(value, oldValue.children, symbol)
+                    ? new ValueHoldingNode(value, symbol, oldValue.children)
                     : new ValueHoldingNode(value, symbol);
+
             this.data |= (HAS_CHILDREN << HAS_CHILDREN_SHIFT);
             return oldValue;
         }
@@ -179,6 +202,7 @@ public class SymbolLookup {
         }
 
         private static int indexOrThrow(char value) {
+            // TODO: optimize calls
             Assert.isTrue(value <= MAX_RANGE_CHAR, "character %s is not allowed in a symbol name", value);
             byte idx = indexLookup[value];
             Assert.isTrue(idx != INVALID_IDX, "character %s is not allowed in a symbol name", value);
@@ -218,7 +242,7 @@ public class SymbolLookup {
             this.symbol = symbol;
         }
 
-        private ValueHoldingNode(char value, Node[] children, Symbol symbol) {
+        private ValueHoldingNode(char value, Symbol symbol, Node[] children) {
             super(value, children);
             this.symbol = symbol;
         }

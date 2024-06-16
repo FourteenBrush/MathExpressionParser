@@ -22,7 +22,7 @@ class SymbolLookupTest {
 
     @Test
     void testNodeLayout() {
-        lookup = ExecutionEnv.createDefault().symbolLookup;
+        lookup = ExecutionEnv.defaulted().symbolLookup;
         Deque<SymbolLookup.Node> stack = new LinkedList<>();
         SymbolLookup.Node curr = lookup.root;
         stack.push(curr);

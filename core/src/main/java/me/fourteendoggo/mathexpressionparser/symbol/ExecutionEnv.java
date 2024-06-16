@@ -13,9 +13,6 @@ import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
 import java.util.regex.Pattern;
 
-// TODO: add support for removing/ inserting if absent
-// TODO: overloads for ifAbsent
-
 /**
  * An environment instance, to which symbols can be bound.
  * When using this environment as a lookup for the parser,
@@ -49,6 +46,15 @@ public class ExecutionEnv {
     public void insertVariable(String name, double value) {
         insertSymbol(new Variable(name, value));
     }
+    
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public Symbol insertVariableIfAbsent(String name, double value) {
+        return insertSymbolIfAbsent(new Variable(name, value));
+    }
+
+    // region functions
 
     /**
      * @see #insertFunction(String, int, int, ToDoubleFunction)
@@ -98,6 +104,50 @@ public class ExecutionEnv {
     }
 
     /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public Symbol insertFunctionIfAbsent(String name, DoubleSupplier fn) {
+        return insertSymbolIfAbsent(new FunctionCallSite(name, 0, ctx -> fn.getAsDouble()));
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public Symbol insertFunctionIfAbsent(String name, DoubleUnaryOperator fn) {
+        return insertSymbolIfAbsent(new FunctionCallSite(name, 1, ctx -> {
+            double first = ctx.getDouble(0);
+            return fn.applyAsDouble(first);
+        }));
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public Symbol insertFunctionIfAbsent(String name, DoubleBinaryOperator fn) {
+        return insertSymbolIfAbsent(new FunctionCallSite(name, 2, ctx -> {
+            double first = ctx.getDouble(0);
+            double second = ctx.getDouble(1);
+            return fn.applyAsDouble(first, second);
+        }));
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public Symbol insertFunctionIfAbsent(String name, int numArgs, ToDoubleFunction<FunctionContext> fn) {
+        return insertFunctionIfAbsent(name, numArgs, numArgs, fn);
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public Symbol insertFunctionIfAbsent(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
+        return insertSymbolIfAbsent(new FunctionCallSite(name, minArgs, maxArgs, fn));
+    }
+
+    // endregion
+
+    /**
      * Inserts a symbol into this environment.
      *
      * @param symbol the symbol to be inserted.
@@ -105,6 +155,15 @@ public class ExecutionEnv {
      */
     public void insertSymbol(Symbol symbol) {
         symbolLookup.insert(symbol);
+    }
+
+    /**
+     * Inserts a symbol into this environment, if it is not already present.
+     *
+     * @return the previously inserted symbol, or null.
+     */
+    public Symbol insertSymbolIfAbsent(Symbol symbol) {
+        return symbolLookup.insertIfAbsent(symbol);
     }
 
     /**
