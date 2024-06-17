@@ -45,7 +45,11 @@ public class Tokenizer {
                 case '/' -> expr.pushToken(Operator.DIVISION);
                 case '+' -> expr.pushToken(Operator.ADDITION);
                 case '%' -> expr.pushToken(Operator.MODULO);
-                case '^' -> expr.pushToken(Operator.BITWISE_XOR);
+                // TODO: revert back pow() and ^ design decision
+                case '^' -> {
+                    // one of the highest priority operators, can be solved immediately
+                    expr.pushToken(Operator.BITWISE_XOR);
+                }
                 case '-' -> {
                     switch (expr.getLastType()) {
                         case OPERAND -> expr.pushToken(Operator.SUBTRACTION);
@@ -279,9 +283,9 @@ public class Tokenizer {
         return result;
     }
 
-    private Operand readBrackets() {
+    private double readBrackets() {
         Tokenizer tokenizer = branchOff(c -> c != ')', pos); // enter expression
-        Operand result = new Operand(tokenizer.readTokens().solve());
+        double result = tokenizer.readTokens().solve();
 
         Assert.isTrue(tokenizer.currentOrDefault() == ')', "missing closing parenthesis");
         pos = tokenizer.pos + 1;
