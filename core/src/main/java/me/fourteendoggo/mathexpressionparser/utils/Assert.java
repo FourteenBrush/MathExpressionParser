@@ -31,7 +31,7 @@ public interface Assert {
 
     static void isValidIdentifierName(String name) {
         if (!Utility.isValidIdentifierName(name)) {
-            throw new SyntaxException("Invalid identifier name: " + name);
+            throw new SyntaxException("invalid identifier name: " + name);
         }
     }
 }
