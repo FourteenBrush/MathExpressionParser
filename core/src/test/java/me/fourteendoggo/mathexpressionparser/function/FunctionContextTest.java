@@ -4,6 +4,8 @@ import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.stream.DoubleStream;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -27,6 +29,18 @@ class FunctionContextTest {
     }
 
     @Test
+    void testLargeNumberOfParameters() {
+        DoubleStream.generate(() -> 1.3).limit(2000)
+                .forEach(ctx::add);
+
+        assertThat(ctx.size()).isEqualTo(2000);
+        assertThatThrownBy(() -> ctx.getInt(1999))
+                .isInstanceOf(SyntaxException.class)
+                // TODO: maybe we want it to be zero based?
+                .hasMessage("expected an integer as 2000th argument, got 1.3");
+    }
+
+    @Test
     void testBoundsAndConversions() {
         ctx.add(2.3);
         assertThat(ctx.getDouble(0)).isEqualTo(2.3);
@@ -39,6 +53,23 @@ class FunctionContextTest {
         assertThatThrownBy(() -> ctx.getBoundedDouble(0, 10, 2))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("set up incorrectly");
+    }
+
+    @Test
+    void test_getUnsigned() {
+        assertThatThrownBy(() -> ctx.getUnsignedInt(0)).isInstanceOf(IndexOutOfBoundsException.class);
+
+        ctx.add(2.1);
+        assertThat(ctx.getUnsignedDouble(0)).isEqualTo(2.1);
+        assertThatThrownBy(() -> ctx.getUnsignedInt(0))
+                .isInstanceOf(SyntaxException.class)
+                .hasMessageContaining("expected an integer as first argument");
+
+        assertThatThrownBy(() -> ctx.getUnsignedInt(-1)).isInstanceOf(IndexOutOfBoundsException.class);
+
+        ctx.add(-12);
+        assertThatThrownBy(() -> ctx.getUnsignedInt(1)).isInstanceOf(SyntaxException.class)
+                .hasMessageContaining("expected an integer between");
     }
 
     @Test
