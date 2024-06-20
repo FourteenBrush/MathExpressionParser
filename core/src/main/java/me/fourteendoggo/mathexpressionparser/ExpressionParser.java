@@ -22,7 +22,8 @@ import static me.fourteendoggo.mathexpressionparser.ExpressionParser.DefaultEnvH
 @SuppressWarnings("unused")
 public class ExpressionParser {
 
-    private ExpressionParser() {}
+    private ExpressionParser() {
+    }
 
     /**
      * @see ExpressionParser#parse(String, ExecutionEnv)
@@ -35,10 +36,10 @@ public class ExpressionParser {
      * Parses the given expression and returns the result
      *
      * @param input the expression to parse
-     * @param env the execution environment to obtain symbols from
+     * @param env   the execution environment to obtain symbols from
      * @return the result of the expression
      * @throws NullPointerException if the expression or env is null
-     * @throws SyntaxException if the given expression is invalid or empty
+     * @throws SyntaxException      if the given expression is invalid or empty
      */
     public static double parse(String input, ExecutionEnv env) {
         Objects.requireNonNull(input, "input was null");
@@ -47,6 +48,16 @@ public class ExpressionParser {
         Tokenizer tokenizer = new Tokenizer(input.toCharArray(), env);
         return tokenizer.readTokens().solve();
     }
+
+    public static void insertVariable(String name, double value) {
+        DEFAULT_ENV.insertVariable(name, value);
+    }
+
+    public static Symbol insertVariableIfAbsent(String name, double value) {
+        return DEFAULT_ENV.insertVariableIfAbsent(name, value);
+    }
+
+    // region functions
 
     /**
      * @see #insertFunction(String, int, int, ToDoubleFunction)
@@ -71,14 +82,16 @@ public class ExpressionParser {
 
     /**
      * Inserts a function into the default execution environment.
+     *
      * @see ExecutionEnv#insertFunction(String, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, int numArgs, ToDoubleFunction<FunctionContext> fn) {
-        insertFunction(functionName, numArgs, numArgs, fn);
+        DEFAULT_ENV.insertFunction(functionName, numArgs, fn);
     }
 
     /**
      * Inserts a function into the default execution environment.
+     *
      * @see ExecutionEnv#insertFunction(String, int, int, ToDoubleFunction)
      */
     public static void insertFunction(String functionName, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
@@ -86,7 +99,54 @@ public class ExpressionParser {
     }
 
     /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public static Symbol insertFunctionIfAbsent(String name, DoubleSupplier fn) {
+        return DEFAULT_ENV.insertFunctionIfAbsent(name, fn);
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public static Symbol insertFunctionIfAbsent(String name, DoubleUnaryOperator fn) {
+        return DEFAULT_ENV.insertFunctionIfAbsent(name, fn);
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public static Symbol insertFunctionIfAbsent(String name, DoubleBinaryOperator fn) {
+        return DEFAULT_ENV.insertFunctionIfAbsent(name, fn);
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public static Symbol insertFunctionIfAbsent(String name, int numArgs, ToDoubleFunction<FunctionContext> fn) {
+        return DEFAULT_ENV.insertFunctionIfAbsent(name, numArgs, fn);
+    }
+
+    /**
+     * @see #insertSymbolIfAbsent(Symbol)
+     */
+    public static Symbol insertFunctionIfAbsent(String name, int minArgs, int maxArgs, ToDoubleFunction<FunctionContext> fn) {
+        return DEFAULT_ENV.insertFunctionIfAbsent(name, minArgs, maxArgs, fn);
+    }
+
+    // endregion
+
+    /**
+     * Inserts a symbol into the global environment, if it is not already present.
+     *
+     * @return the previously inserted symbol, or null.
+     */
+    public static Symbol insertSymbolIfAbsent(Symbol symbol) {
+        return DEFAULT_ENV.insertSymbolIfAbsent(symbol);
+    }
+
+    /**
      * Inserts a symbol into the default execution environment.
+     *
      * @param symbol the symbol to insert.
      * @see FunctionCallSite
      * @see Variable
@@ -94,6 +154,8 @@ public class ExpressionParser {
     public static void insertSymbol(Symbol symbol) {
         DEFAULT_ENV.insertSymbol(symbol);
     }
+
+    // TODO(urgent): create overrides similar to ExecutionEnv::insertX
 
     static class DefaultEnvHolder {
         static final ExecutionEnv DEFAULT_ENV = ExecutionEnv.defaulted();
