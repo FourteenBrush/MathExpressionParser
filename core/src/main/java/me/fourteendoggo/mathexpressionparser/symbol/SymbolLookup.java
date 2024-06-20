@@ -70,6 +70,7 @@ public class SymbolLookup {
      * @throws SyntaxException when this symbol is already inserted.
      */
     public void insert(Symbol symbol) {
+        // TODO: maybe have some "trusted" insert that doesn't validate symbol name again
         putVal(symbol, true);
     }
 
@@ -202,10 +203,12 @@ public class SymbolLookup {
         }
 
         private static int indexOrThrow(char value) {
-            // TODO: optimize calls
-            Assert.isTrue(value <= MAX_RANGE_CHAR, "character %s is not allowed in a symbol name", value);
-            byte idx = indexLookup[value];
-            Assert.isTrue(idx != INVALID_IDX, "character %s is not allowed in a symbol name", value);
+            int idx = -1; // dummy value to make the compiler stop complaining
+
+            Assert.isTrue(
+                    value <= MAX_RANGE_CHAR && (idx = indexLookup[value]) != INVALID_IDX,
+                    "character %s is not allowed in a symbol name", value
+            );
             return idx;
         }
 
