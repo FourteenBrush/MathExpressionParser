@@ -48,7 +48,8 @@ public class Tokenizer {
                 // TODO: revert back pow() and ^ design decision
                 case '^' -> {
                     // one of the highest priority operators, can be solved immediately
-                    expr.pushToken(Operator.BITWISE_XOR);
+                    // TODO: solve this here rather than pushing an Operator
+                    expr.pushToken(Operator.POWER);
                 }
                 case '-' -> {
                     switch (expr.getLastType()) {

@@ -111,13 +111,18 @@ public class Expression {
                     if (!current.hasHigherPriority()) continue;
                     // unlink current
                     LinkedCalculation prev = current.prev;
-                    next.left.setValue(current.solve());
+                    double solved = current.solve();
+                    next.left.setValue(solved);
+                    //next.left.setValue(current.solve());
                     next.prev = prev; // remove traces to us on next
                     numCalculations--;
                     // we may have a left neighbour which didn't get executed yet because its operator priority is lower than ours
                     if (prev == null) {
                         // looks like we are head, and we are about to be unlinked, change head to next
                         head = next;
+                    } else {
+                        prev.right.setValue(solved);
+                        prev.next = next;
                     }
                 } else if (current.prev != null) {
                     // current refers to the tail
@@ -125,6 +130,7 @@ public class Expression {
                     current.prev.right.setValue(current.solve());
                     // unlink current
                     current.prev.next = null;
+                    current.prev = null;
                     numCalculations--;
                 }
             }

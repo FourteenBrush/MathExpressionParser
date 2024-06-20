@@ -142,10 +142,6 @@ class ExpressionParserTest {
         assertThat(ExpressionParser.parse("xor(1, 0)")).isOne();
         assertThat(ExpressionParser.parse("xor(1, 1)")).isZero();
 
-        assertThat(ExpressionParser.parse("0 ^ 0")).isZero();
-        assertThat(ExpressionParser.parse("0 ^ 1")).isOne();
-        assertThat(ExpressionParser.parse("1 ^ 0")).isOne();
-        assertThat(ExpressionParser.parse("1 ^ 1")).isZero();
         // NOT
         assertThat(ExpressionParser.parse("not(0)")).isOne();
         assertThat(ExpressionParser.parse("not(1)")).isZero();
@@ -175,10 +171,11 @@ class ExpressionParserTest {
         assertThat(ExpressionParser.parse("xnor(1, 0)")).isZero();
         assertThat(ExpressionParser.parse("xnor(1, 1)")).isOne();
 
-        assertThat(ExpressionParser.parse("!(0 ^ 0)")).isOne();
-        assertThat(ExpressionParser.parse("!(0 ^ 1)")).isZero();
-        assertThat(ExpressionParser.parse("!(1 ^ 0)")).isZero();
-        assertThat(ExpressionParser.parse("!(1 ^ 1)")).isOne();
+        assertThat(ExpressionParser.parse("!xor(0, 0)")).isOne();
+        assertThat(ExpressionParser.parse("!xor(0, 1)")).isZero();
+        assertThat(ExpressionParser.parse("!xor(1, 0)")).isZero();
+        assertThat(ExpressionParser.parse("!xor(1, 1)")).isOne();
+
         // bool()
         assertThat(ExpressionParser.parse("bool(0.0)")).isZero();
         assertThat(ExpressionParser.parse("bool(1.34)")).isOne();

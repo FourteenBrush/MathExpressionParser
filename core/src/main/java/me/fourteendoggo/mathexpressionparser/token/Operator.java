@@ -5,6 +5,7 @@ import java.util.function.DoubleBinaryOperator;
 import static me.fourteendoggo.mathexpressionparser.utils.Utility.*;
 
 public enum Operator implements Token {
+    POWER("^", 32, Math::pow),
     MULTIPLICATION("*", 29, (a, b) -> a * b),
     DIVISION("/", 29, (a, b) -> a / b),
     MODULO("%", 29, (a, b) -> a % b),
@@ -19,7 +20,7 @@ public enum Operator implements Token {
     EQUALS("==", 24, (a, b) -> boolToDouble(a == b)),
     NOT_EQUALS("!=", 24, (a, b) -> boolToDouble(a != b)),
     BITWISE_AND("&", 23, (a, b) -> requireInt(a) & requireInt(b)),
-    BITWISE_XOR("^", 22, (a, b) -> requireInt(a) ^ requireInt(b)),
+    //BITWISE_XOR("^", 22, (a, b) -> requireInt(a) ^ requireInt(b)),
     BITWISE_OR("|", 21, (a, b) -> requireInt(a) | requireInt(b)),
     LOGICAL_AND("&&", 20, (a, b) -> boolToDouble(doubleToBool(a) && doubleToBool(b))),
     LOGICAL_OR("||", 19, (a, b) -> boolToDouble(doubleToBool(a) || doubleToBool(b)));
