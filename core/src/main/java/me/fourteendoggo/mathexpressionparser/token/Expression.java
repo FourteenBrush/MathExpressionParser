@@ -81,7 +81,7 @@ public class Expression {
 
                 Assert.notNull(second.right, "unexpected trailing operator");
 
-                if (first.hasHigherPriority()) {
+                if (first.canExecuteFirst()) {
                     // f.e. 2*3+2
                     double firstOperand = first.solve();
                     double secondOperand = second.right.getValue();
@@ -108,7 +108,7 @@ public class Expression {
                 LinkedCalculation next = current.next;
                 if (next != null) {
                     // we can only solve 'current' if its operator priority is higher than or equal to the next's operator priority
-                    if (!current.hasHigherPriority()) continue;
+                    if (!current.canExecuteFirst()) continue;
                     // unlink current
                     LinkedCalculation prev = current.prev;
                     double solved = current.solve();
@@ -183,7 +183,7 @@ public class Expression {
         }
 
         // we have a reference to the next calculation so no need to implement Comparable<LinkedCalculation>
-        public boolean hasHigherPriority() {
+        public boolean canExecuteFirst() {
             return operator.getPriority() >= next.operator.getPriority();
         }
 
