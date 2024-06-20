@@ -186,7 +186,7 @@ The parser ignores spaces, except for spaces between two parts of a number, whic
 
 A list of examples (tests, which should all be working) can be found in the [tests](core/src/test/resources/positive-input.csv) file.
 
-## TODO
+## TODO (no particular order)
 
 - [x] Implementing multiple operators together with operator priority
 - [x] Implementing function calls
@@ -197,6 +197,7 @@ A list of examples (tests, which should all be working) can be found in the [tes
 - [ ] Allow numeric values with different bases, e.g. 0x1, 0b2.
 - [ ] Allowing to insert variables through the parser, e.g. "x = sqrt(16)"
 - [ ] Allow multi-line expressions
+- [ ] Allow expressions to be cached for later reuse
 
 ## More examples:
 
