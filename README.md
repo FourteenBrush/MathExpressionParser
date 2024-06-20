@@ -170,7 +170,7 @@ the built-in `true` and `false` variables.
 |    ==    | 10 == 9  | returns 1 if 10 equals 9, 0 otherwise                      |
 |    !=    | 10 != 9  | returns 1 if 10 does not equal 9, 0 otherwise              |
 |    &     | 10 & 9   | bitwise and, requires integers as operands                 |
-|    ^     | 10 ^ 9   | bitwise xor, requires integers as operands                 |
+|    ^     | 2 ^ 3    | power, pow(2, 3) as a function also exists                 |
 |    \|    | 10 \| 9  | bitwise or, requires integers as operands                  |
 |    &&    | 10 && 9  | boolean and                                                |
 |   \|\|   | 2 \|\| 1 | boolean or                                                 |
