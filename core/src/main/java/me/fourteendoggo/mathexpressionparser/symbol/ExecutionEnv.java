@@ -37,7 +37,6 @@ public class ExecutionEnv {
     /**
      * @return a {@link ExecutionEnv} populated with all default symbols.
      */
-    @ApiStatus.Experimental
     public static ExecutionEnv defaulted() {
         // delegate to BuiltinSymbols to not clutter up this class
         return BuiltinSymbols.createExecutionEnv();
