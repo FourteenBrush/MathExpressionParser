@@ -167,6 +167,15 @@ public class ExecutionEnv {
     }
 
     /**
+     * Removes a {@link Symbol} from this environment.
+     * @param name the name, not validated.
+     * @return the removed symbol, or null.
+     */
+    public Symbol removeSymbol(String name) {
+        return symbolLookup.remove(name);
+    }
+
+    /**
      * Looks up a symbol based on an input
      *
      * @param buf the input as a char array

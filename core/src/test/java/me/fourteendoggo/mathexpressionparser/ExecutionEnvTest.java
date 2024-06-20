@@ -24,7 +24,6 @@ public class ExecutionEnvTest {
         env = ExecutionEnv.empty();
     }
 
-    // TODO: revision
     static Stream<Arguments> provideEnvironments() {
         return Stream.of(
                 ExecutionEnv.empty(),
@@ -214,5 +213,41 @@ public class ExecutionEnvTest {
         }).doesNotThrowAnyException();
 
         assertThat(ExpressionParser.parse("a()", env)).isEqualTo(1);
+    }
+
+    // TODO: some more tests on removing
+
+    @Test
+    void testRemovingOnEmptyEnv() {
+        assertThat(env.removeSymbol("test")).isNull();
+        assertThat(env.removeSymbol("")).isNull();
+        assertThat(env.removeSymbol("_")).isNull();
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideEnvironments")
+    void testRemovingIllegalNames(ExecutionEnv env) {
+        String[] idents = {"#", "'", "é", " ", "  "};
+
+        for (String ident : idents) {
+            assertThatCode(() -> {
+                Symbol sym = env.removeSymbol(ident);
+                assertThat(sym).isNull();
+            }).doesNotThrowAnyException();
+        }
+    }
+
+    @Test
+    void testRemovingBuiltinFunctions() {
+        ExecutionEnv env = ExecutionEnv.defaulted();
+        String[] idents = {"sin", "cos", "max", "abs", "signum", "now", "bool", "and"};
+
+        for (String ident : idents) {
+            assertThat(env.removeSymbol(ident)).isNotNull().matches(sym -> sym.getName().equals(ident));
+            assertThatThrownBy(() -> env.lookupSymbol(ident.toCharArray(), 0))
+                    .isInstanceOf(SymbolNotFoundException.class);
+
+            assertThat(env.insertFunctionIfAbsent(ident, () -> 2)).isNull();
+        }
     }
 }

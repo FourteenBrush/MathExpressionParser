@@ -4,9 +4,10 @@ import me.fourteendoggo.mathexpressionparser.utils.Assert;
 import me.fourteendoggo.mathexpressionparser.utils.Utility;
 import me.fourteendoggo.mathexpressionparser.exceptions.SyntaxException;
 import org.jetbrains.annotations.Debug;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * An efficient lookup tree for {@link Symbol}s.
@@ -95,6 +96,44 @@ public class SymbolLookup {
 
         char lastChar = name.charAt(name.length() - 1);
         return node.insertValueChild(lastChar, symbol, expectUnoccupied);
+    }
+
+    public Symbol remove(String name) {
+        // root followed by children of different levels
+        List<Node> traversed = new ArrayList<>();
+        traversed.add(root);
+
+        Node last = root;
+        Node prevLast = root;
+
+        for (int i = 0; i < name.length(); i++) {
+            Node node = last.getChildSafe(name.charAt(i));
+            if (node == null) return null;
+
+            traversed.add(node);
+            prevLast = last;
+            last = node;
+        }
+
+        if (!(last instanceof ValueHoldingNode valueHoldingNode)) return null;
+
+        if (last.hasChildren()) {
+            // unfortunately we don't have pointers, otherwise this would look like
+            // *last = new Node()
+            prevLast.demoteChild(name.charAt(name.length() - 1));
+        } else {
+            while (true) {
+                Node child = traversed.remove(traversed.size() - 1);
+                Node parent = traversed.remove(traversed.size() - 1);
+
+                int childIdx = indexLookup[child.getCharacter()];
+                parent.children[childIdx] = null;
+
+                if (parent.hasChildren()) break;
+            }
+        }
+
+        return valueHoldingNode.symbol;
     }
 
     /**
@@ -190,7 +229,28 @@ public class SymbolLookup {
             return oldValue;
         }
 
-        private boolean hasChildren() {
+        private void demoteChild(char value) {
+            int idx = indexOrThrow(value);
+            if (!(children[idx] instanceof ValueHoldingNode node)) return;
+
+            // NOTE: assumes caller verified hasChildren()
+            children[idx] = new Node(value, node.children);
+        }
+
+        @Nullable
+        private Node getChildSafe(char value) {
+            int idx = getIndexSafe(value);
+            return idx != -1 ? children[idx] : null;
+        }
+
+        private int getIndexSafe(char value) {
+            if (value > MAX_RANGE_CHAR) return -1;
+            int idx = indexLookup[value];
+            if (idx == INVALID_IDX) return -1;
+            return idx;
+        }
+
+        boolean hasChildren() {
             return data >> HAS_CHILDREN_SHIFT == HAS_CHILDREN;
         }
 
