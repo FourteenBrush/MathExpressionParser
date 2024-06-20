@@ -50,12 +50,13 @@ public class FunctionCallSite implements Symbol {
         return new FunctionContext();
     }
 
-    public double apply(FunctionContext context) {
-        int providedArgs = context.size();
+    // TODO: make this return Operand
+    public double apply(FunctionContext ctx) {
+        int providedArgs = ctx.size();
         Assert.isFalse(providedArgs < minArgs, "not enough arguments provided (expected %s, got %s)", minArgs, providedArgs);
         Assert.isFalse(providedArgs > maxArgs, "too many arguments provided (max %s, got %s)", maxArgs, providedArgs);
 
-        return function.applyAsDouble(context);
+        return function.applyAsDouble(ctx);
     }
 
     @Override

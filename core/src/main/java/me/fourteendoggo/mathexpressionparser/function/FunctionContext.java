@@ -43,7 +43,7 @@ public class FunctionContext {
 
     /**
      * Adds a parameter to this context, resizing the internal array if necessary.
-     * This should not be called to modify any parameters after they have been set.
+     * This should ideally only be called internally, and not to alter the actual parameters.
      * @param value the parameter to add
      */
     public void add(double value) {
