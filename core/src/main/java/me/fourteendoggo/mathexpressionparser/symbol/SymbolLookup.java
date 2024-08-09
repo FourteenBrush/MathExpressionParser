@@ -78,7 +78,7 @@ public class SymbolLookup {
     /**
      * Inserts a symbol if it is not already present.
      *
-     * @return the precious symbol if it was present, or null.
+     * @return the previous symbol if it was present, or null.
      */
     public Symbol insertIfAbsent(Symbol symbol) {
         Node lastNode = putVal(symbol, false);
