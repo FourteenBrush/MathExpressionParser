@@ -243,7 +243,7 @@ public class SymbolLookup {
             return idx != -1 ? children[idx] : null;
         }
 
-        private int getIndexSafe(char value) {
+        private static int getIndexSafe(char value) {
             if (value > MAX_RANGE_CHAR) return -1;
             int idx = indexLookup[value];
             if (idx == INVALID_IDX) return -1;
