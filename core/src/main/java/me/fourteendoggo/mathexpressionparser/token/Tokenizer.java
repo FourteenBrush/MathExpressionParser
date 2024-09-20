@@ -45,7 +45,6 @@ public class Tokenizer {
                 case '/' -> expr.pushToken(Operator.DIVISION);
                 case '+' -> expr.pushToken(Operator.ADDITION);
                 case '%' -> expr.pushToken(Operator.MODULO);
-                // TODO: revert back pow() and ^ design decision
                 case '^' -> {
                     // one of the highest priority operators, can be solved immediately
                     // TODO: solve this here rather than pushing an Operator
