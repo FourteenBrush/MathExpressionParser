@@ -231,9 +231,9 @@ public class SymbolLookup {
 
         private void demoteChild(char value) {
             int idx = indexOrThrow(value);
+            assert children[idx] != null : "demoting null child";
             if (!(children[idx] instanceof ValueHoldingNode node)) return;
 
-            // NOTE: assumes caller verified hasChildren()
             children[idx] = new Node(value, node.children);
         }
 
